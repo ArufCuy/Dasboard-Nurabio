@@ -695,7 +695,10 @@
             </div>
             <div class="glass-card p-6 rounded-lg">
               <h3 class="text-gray-400 text-sm mb-2">Rata-rata Order</h3>
-              <p id="analytics-avg-order" class="text-2xl font-bold text-white">
+              <p
+                id="analytics-avg-order"
+                class="text-2xl font-bold text-white"
+              >
                 Rp 0
               </p>
               <p class="text-yellow-400 text-sm mt-1">Per pesanan</p>
@@ -708,13 +711,17 @@
               <h3 class="text-white text-lg font-semibold mb-4">
                 Revenue Trend (7 Hari Terakhir)
               </h3>
-              <canvas id="revenue-chart" width="400" height="200"></canvas>
+              <div class="chart-container" style="position: relative; height: 200px;">
+                <canvas id="revenue-chart" width="400" height="200"></canvas>
+              </div>
             </div>
             <div class="glass-card p-6 rounded-lg">
               <h3 class="text-white text-lg font-semibold mb-4">
                 Pesanan per Hari (7 Hari Terakhir)
               </h3>
-              <canvas id="orders-chart" width="400" height="200"></canvas>
+              <div class="chart-container" style="position: relative; height: 200px;">
+                <canvas id="orders-chart" width="400" height="200"></canvas>
+              </div>
             </div>
           </div>
 
