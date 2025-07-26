@@ -1,267 +1,219 @@
+
 // Global Variables
-let customers = [];
-let couriers = [];
-let currentEditingCustomer = null;
-let currentEditingCourier = null;
-let isLoading = false;
-let orders = [];
-let waterTypes = [];
+let customers = []
+let couriers = []
+let currentEditingCustomer = null
+let currentEditingCourier = null
+let isLoading = false
+let orders = []
+let waterTypes = []
 let stockData = {
   filled: 0,
   empty: 0,
   damaged: 0,
-};
-let lucide; // Declare the lucide variable
-let currentEditingOrder = null;
+}
+let lucide // Declare the lucide variable
+let currentEditingOrder = null
 
 // Initialize App
 window.initApp = () => {
   // Check admin authentication using Firebase
-  const adminSession = JSON.parse(localStorage.getItem("adminSession"));
+  const adminSession = JSON.parse(localStorage.getItem("adminSession"))
 
   if (!adminSession || !adminSession.username) {
-    window.location.href = "admin-login.html";
-    return;
+    window.location.href = "admin-login.html"
+    return
   } else {
     const q = window.query(
       window.collection(window.db, "admins"),
-      window.where("username", "==", adminSession.username)
-    );
+      window.where("username", "==", adminSession.username),
+    )
 
     window
       .getDocs(q)
       .then((snapshot) => {
         if (snapshot.empty) {
-          alert("Session tidak valid, login ulang!");
-          localStorage.removeItem("adminSession");
-          window.location.href = "admin-login.html";
+          alert("Session tidak valid, login ulang!")
+          localStorage.removeItem("adminSession")
+          window.location.href = "admin-login.html"
         }
       })
       .catch((err) => {
-        console.error("Gagal cek login:", err);
-        localStorage.removeItem("adminSession");
-        window.location.href = "admin-login.html";
-      });
+        console.error("Gagal cek login:", err)
+        localStorage.removeItem("adminSession")
+        window.location.href = "admin-login.html"
+      })
   }
 
   // Hide loading screen
   setTimeout(() => {
-    document.getElementById("loading").style.display = "none";
-    initializeEventListeners();
-    loadInitialData();
-    updateCurrentTime();
-    setInterval(updateCurrentTime, 1000);
-    lucide.createIcons(); // Use the lucide variable
-  }, 1500);
-};
+    document.getElementById("loading").style.display = "none"
+    initializeEventListeners()
+    loadInitialData()
+    updateCurrentTime()
+    setInterval(updateCurrentTime, 1000)
+    lucide.createIcons() // Use the lucide variable
+  }, 1500)
+}
 
 // Event Listeners
 function initializeEventListeners() {
   // Sidebar Navigation
-  const navItems = document.querySelectorAll(".nav-item");
+  const navItems = document.querySelectorAll(".nav-item")
   navItems.forEach((item) => {
     item.addEventListener("click", (e) => {
-      e.preventDefault();
-      const page = item.getAttribute("href").substring(1);
-      navigateToPage(page);
-    });
-  });
+      e.preventDefault()
+      const page = item.getAttribute("href").substring(1)
+      navigateToPage(page)
+    })
+  })
 
   // Sidebar Toggle (Mobile)
-  const sidebarToggle = document.getElementById("sidebar-toggle");
-  const sidebar = document.getElementById("sidebar");
-  const sidebarOverlay = document.getElementById("sidebar-overlay");
+  const sidebarToggle = document.getElementById("sidebar-toggle")
+  const sidebar = document.getElementById("sidebar")
+  const sidebarOverlay = document.getElementById("sidebar-overlay")
 
   sidebarToggle.addEventListener("click", () => {
-    sidebar.classList.toggle("-translate-x-full");
-    sidebarOverlay.classList.toggle("hidden");
-  });
+    sidebar.classList.toggle("-translate-x-full")
+    sidebarOverlay.classList.toggle("hidden")
+  })
 
   sidebarOverlay.addEventListener("click", () => {
-    sidebar.classList.add("-translate-x-full");
-    sidebarOverlay.classList.add("hidden");
-  });
+    sidebar.classList.add("-translate-x-full")
+    sidebarOverlay.classList.add("hidden")
+  })
 
   // Customer Management
-  document
-    .getElementById("add-customer-btn")
-    .addEventListener("click", () => openCustomerModal());
-  document
-    .getElementById("customer-cancel-btn")
-    .addEventListener("click", closeCustomerModal);
-  document
-    .getElementById("customer-form")
-    .addEventListener("submit", handleCustomerSubmit);
-  document
-    .getElementById("customer-search")
-    .addEventListener("input", handleCustomerSearch);
+  document.getElementById("add-customer-btn").addEventListener("click", () => openCustomerModal())
+  document.getElementById("customer-cancel-btn").addEventListener("click", closeCustomerModal)
+  document.getElementById("customer-form").addEventListener("submit", handleCustomerSubmit)
+  document.getElementById("customer-search").addEventListener("input", handleCustomerSearch)
 
   // Courier Management
-  document
-    .getElementById("add-courier-btn")
-    .addEventListener("click", () => openCourierModal());
-  document
-    .getElementById("courier-cancel-btn")
-    .addEventListener("click", closeCourierModal);
-  document
-    .getElementById("courier-form")
-    .addEventListener("submit", handleCourierSubmit);
-  document
-    .getElementById("courier-search")
-    .addEventListener("input", handleCourierSearch);
+  document.getElementById("add-courier-btn").addEventListener("click", () => openCourierModal())
+  document.getElementById("courier-cancel-btn").addEventListener("click", closeCourierModal)
+  document.getElementById("courier-form").addEventListener("submit", handleCourierSubmit)
+  document.getElementById("courier-search").addEventListener("input", handleCourierSearch)
 
   // Stock Management
-  document
-    .getElementById("update-stock-btn")
-    .addEventListener("click", () => openStockModal());
-  document
-    .getElementById("stock-cancel-btn")
-    .addEventListener("click", closeStockModal);
-  document
-    .getElementById("stock-form")
-    .addEventListener("submit", handleStockSubmit);
+  document.getElementById("update-stock-btn").addEventListener("click", () => openStockModal())
+  document.getElementById("stock-cancel-btn").addEventListener("click", closeStockModal)
+  document.getElementById("stock-form").addEventListener("submit", handleStockSubmit)
 
   // Order Management
-  document
-    .getElementById("add-order-btn")
-    .addEventListener("click", () => openOrderModal());
-  document
-    .getElementById("order-cancel-btn")
-    .addEventListener("click", closeOrderModal);
-  document
-    .getElementById("order-form")
-    .addEventListener("submit", handleOrderSubmit);
-  document
-    .getElementById("order-search")
-    .addEventListener("input", handleOrderSearch);
-  document
-    .getElementById("order-status-filter")
-    .addEventListener("change", handleOrderFilter);
-  document
-    .getElementById("order-courier-filter")
-    .addEventListener("change", handleOrderFilter);
-  document
-    .getElementById("order-courier-type")
-    .addEventListener("change", window.toggleCourierSelection);
+  document.getElementById("add-order-btn").addEventListener("click", () => openOrderModal())
+  document.getElementById("order-cancel-btn").addEventListener("click", closeOrderModal)
+  document.getElementById("order-form").addEventListener("submit", handleOrderSubmit)
+  document.getElementById("order-search").addEventListener("input", handleOrderSearch)
+  document.getElementById("order-status-filter").addEventListener("change", handleOrderFilter)
+  document.getElementById("order-courier-filter").addEventListener("change", handleOrderFilter)
+  document.getElementById("order-courier-type").addEventListener("change", window.toggleCourierSelection)
 
   // Add quantity change listener
-  document
-    .getElementById("order-quantity")
-    .addEventListener("input", window.updatePriceByQuantity);
+  document.getElementById("order-quantity").addEventListener("input", window.updatePriceByQuantity)
 
   // Water Types Management
-  document
-    .getElementById("add-water-type-btn")
-    .addEventListener("click", () => openWaterTypeModal());
-  document
-    .getElementById("water-type-cancel-btn")
-    .addEventListener("click", closeWaterTypeModal);
-  document
-    .getElementById("water-type-form")
-    .addEventListener("submit", handleWaterTypeSubmit);
+  document.getElementById("add-water-type-btn").addEventListener("click", () => openWaterTypeModal())
+  document.getElementById("water-type-cancel-btn").addEventListener("click", closeWaterTypeModal)
+  document.getElementById("water-type-form").addEventListener("submit", handleWaterTypeSubmit)
 
   // Logout
-  document.getElementById("logout-btn").addEventListener("click", handleLogout);
+  document.getElementById("logout-btn").addEventListener("click", handleLogout)
 
   // Close modals when clicking outside
   document.getElementById("customer-modal").addEventListener("click", (e) => {
     if (e.target.id === "customer-modal") {
-      closeCustomerModal();
+      closeCustomerModal()
     }
-  });
+  })
 
   document.getElementById("courier-modal").addEventListener("click", (e) => {
     if (e.target.id === "courier-modal") {
-      closeCourierModal();
+      closeCourierModal()
     }
-  });
+  })
 
   document.getElementById("stock-modal").addEventListener("click", (e) => {
     if (e.target.id === "stock-modal") {
-      closeStockModal();
+      closeStockModal()
     }
-  });
+  })
 
   document.getElementById("order-modal").addEventListener("click", (e) => {
     if (e.target.id === "order-modal") {
-      closeOrderModal();
+      closeOrderModal()
     }
-  });
+  })
 
   document.getElementById("water-type-modal").addEventListener("click", (e) => {
     if (e.target.id === "water-type-modal") {
-      closeWaterTypeModal();
+      closeWaterTypeModal()
     }
-  });
+  })
 
   // Add this in initializeEventListeners function:
-  document
-    .getElementById("assign-form")
-    .addEventListener("submit", handleAssignSubmit);
-  document
-    .getElementById("assign-cancel-btn")
-    .addEventListener("click", closeAssignModal);
+  document.getElementById("assign-form").addEventListener("submit", handleAssignSubmit)
+  document.getElementById("assign-cancel-btn").addEventListener("click", closeAssignModal)
 
   // Close modal when clicking outside
   document.getElementById("assign-modal").addEventListener("click", (e) => {
     if (e.target.id === "assign-modal") {
-      closeAssignModal();
+      closeAssignModal()
     }
-  });
+  })
 
   // Order Edit Management
-  document
-    .getElementById("order-edit-cancel-btn")
-    .addEventListener("click", closeOrderEditModal);
-  document
-    .getElementById("order-edit-form")
-    .addEventListener("submit", handleOrderEditSubmit);
+  document.getElementById("order-edit-cancel-btn").addEventListener("click", closeOrderEditModal)
+  document.getElementById("order-edit-form").addEventListener("submit", handleOrderEditSubmit)
 
   // Close modal when clicking outside
   document.getElementById("order-edit-modal").addEventListener("click", (e) => {
     if (e.target.id === "order-edit-modal") {
-      closeOrderEditModal();
+      closeOrderEditModal()
     }
-  });
+  })
 }
 
 // Logout Handler
 function handleLogout() {
   if (confirm("Apakah Anda yakin ingin logout?")) {
-    localStorage.removeItem("adminSession");
-    window.location.href = "admin-login.html";
+    localStorage.removeItem("adminSession")
+    window.location.href = "admin-login.html"
   }
 }
 
 // Navigation
 function navigateToPage(page) {
   // Hide all pages
-  const pages = document.querySelectorAll(".page-content");
-  pages.forEach((p) => p.classList.add("hidden"));
+  const pages = document.querySelectorAll(".page-content")
+  pages.forEach((p) => p.classList.add("hidden"))
 
   // Show selected page
-  document.getElementById(`page-${page}`).classList.remove("hidden");
+  document.getElementById(`page-${page}`).classList.remove("hidden")
 
   // Update active nav item
-  const navItems = document.querySelectorAll(".nav-item");
-  navItems.forEach((item) => item.classList.remove("active"));
-  document.querySelector(`[href="#${page}"]`).classList.add("active");
+  const navItems = document.querySelectorAll(".nav-item")
+  navItems.forEach((item) => item.classList.remove("active"))
+  document.querySelector(`[href="#${page}"]`).classList.add("active")
 
   // Load page-specific data
   if (page === "customers") {
-    loadCustomers();
+    loadCustomers()
   } else if (page === "couriers") {
-    loadCouriers();
+    loadCouriers()
   } else if (page === "water-types") {
-    loadWaterTypes();
+    loadWaterTypes()
   } else if (page === "analytics") {
-    loadAnalytics();
+    // Add delay to ensure DOM is ready
+    setTimeout(() => {
+      loadAnalytics()
+    }, 200)
   }
 }
 
 // Time Update
 function updateCurrentTime() {
-  const now = new Date();
+  const now = new Date()
   const timeString = now.toLocaleDateString("id-ID", {
     weekday: "long",
     year: "numeric",
@@ -269,36 +221,33 @@ function updateCurrentTime() {
     day: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-  });
-  document.getElementById("current-time").textContent = timeString;
+  })
+  document.getElementById("current-time").textContent = timeString
 }
 
 // Load Initial Data with better error handling
 async function loadInitialData() {
   try {
-    console.log("🔄 Loading initial data...");
-    await testFirebaseConnection();
-    await loadCustomers();
-    await loadCouriers();
-    await loadOrders();
-    await loadWaterTypes();
-    await loadStockHistory();
-    updateStockDisplay();
-    updateDashboardStats();
-    loadRecentOrders();
-    loadPopularProducts();
-    console.log("✅ Initial data loaded successfully!");
+    console.log("🔄 Loading initial data...")
+    await testFirebaseConnection()
+    await loadCustomers()
+    await loadCouriers()
+    await loadOrders()
+    await loadWaterTypes()
+    await loadStockHistory()
+    updateStockDisplay()
+    updateDashboardStats()
+    loadRecentOrders()
+    loadPopularProducts()
+    console.log("✅ Initial data loaded successfully!")
   } catch (error) {
-    console.error("❌ Error loading initial data:", error);
+    console.error("❌ Error loading initial data:", error)
 
     if (error.code === "permission-denied") {
-      showToast(
-        "❌ Firebase permission denied. Periksa Firestore Rules!",
-        "error"
-      );
-      showFirebaseRulesHelp();
+      showToast("❌ Firebase permission denied. Periksa Firestore Rules!", "error")
+      showFirebaseRulesHelp()
     } else {
-      showToast("❌ Error loading data: " + error.message, "error");
+      showToast("❌ Error loading data: " + error.message, "error")
     }
   }
 }
@@ -306,29 +255,26 @@ async function loadInitialData() {
 // Water Types Management
 async function loadWaterTypes() {
   try {
-    console.log("💧 Loading water types from Firestore...");
+    console.log("💧 Loading water types from Firestore...")
     const querySnapshot = await window.getDocs(
-      window.query(
-        window.collection(window.db, "water_types"),
-        window.orderBy("name")
-      )
-    );
-    waterTypes = [];
+      window.query(window.collection(window.db, "water_types"), window.orderBy("name")),
+    )
+    waterTypes = []
     querySnapshot.forEach((doc) => {
-      waterTypes.push({ id: doc.id, ...doc.data() });
-    });
+      waterTypes.push({ id: doc.id, ...doc.data() })
+    })
 
     // If no water types exist, create default ones
     if (waterTypes.length === 0) {
-      await createDefaultWaterTypes();
+      await createDefaultWaterTypes()
     }
 
-    console.log(`✅ Loaded ${waterTypes.length} water types`);
-    renderWaterTypes();
-    updateWaterTypeDropdowns();
+    console.log(`✅ Loaded ${waterTypes.length} water types`)
+    renderWaterTypes()
+    updateWaterTypeDropdowns()
   } catch (error) {
-    console.error("❌ Error loading water types:", error);
-    showToast("❌ Error loading water types: " + error.message, "error");
+    console.error("❌ Error loading water types:", error)
+    showToast("❌ Error loading water types: " + error.message, "error")
   }
 }
 
@@ -352,7 +298,7 @@ async function createDefaultWaterTypes() {
       deliveryPrice: 23000,
       description: "Air Alkali pH Tinggi",
     },
-  ];
+  ]
 
   for (const type of defaultTypes) {
     await window.addDoc(window.collection(window.db, "water_types"), {
@@ -360,15 +306,15 @@ async function createDefaultWaterTypes() {
       isActive: true,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-    });
+    })
   }
 
-  await loadWaterTypes();
+  await loadWaterTypes()
 }
 
 function renderWaterTypes() {
-  const grid = document.getElementById("water-types-grid");
-  if (!grid) return;
+  const grid = document.getElementById("water-types-grid")
+  if (!grid) return
 
   if (waterTypes.length === 0) {
     grid.innerHTML = `
@@ -377,27 +323,25 @@ function renderWaterTypes() {
         <p class="text-white text-lg">Belum ada jenis air</p>
         <p class="text-gray-400 text-sm mt-2">Klik "Tambah Jenis Air" untuk memulai</p>
       </div>
-    `;
-    return;
+    `
+    return
   }
 
-  grid.innerHTML = "";
+  grid.innerHTML = ""
 
   waterTypes.forEach((waterType) => {
-    const waterTypeCard = createWaterTypeCard(waterType);
-    grid.appendChild(waterTypeCard);
-  });
+    const waterTypeCard = createWaterTypeCard(waterType)
+    grid.appendChild(waterTypeCard)
+  })
 
-  lucide.createIcons();
+  lucide.createIcons()
 }
 
 function createWaterTypeCard(waterType) {
-  const card = document.createElement("div");
-  card.className = "glass-card p-6 rounded-lg animate-fade-in";
+  const card = document.createElement("div")
+  card.className = "glass-card p-6 rounded-lg animate-fade-in"
 
-  const statusClass = waterType.isActive
-    ? "bg-green-500/20 text-green-400"
-    : "bg-red-500/20 text-red-400";
+  const statusClass = waterType.isActive ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"
 
   card.innerHTML = `
     <div class="flex justify-between items-start mb-4">
@@ -419,11 +363,9 @@ function createWaterTypeCard(waterType) {
           <i data-lucide="trash-2" class="h-4 w-4"></i>
         </button>
         <button onclick="toggleWaterTypeStatus('${waterType.id}', ${
-    waterType.isActive
-  })" class="p-2 text-gray-400 hover:text-blue-400 hover:bg-blue-500/10 rounded">
-          <i data-lucide="${
-            waterType.isActive ? "pause" : "play"
-          }" class="h-4 w-4"></i>
+          waterType.isActive
+        })" class="p-2 text-gray-400 hover:text-blue-400 hover:bg-blue-500/10 rounded">
+          <i data-lucide="${waterType.isActive ? "pause" : "play"}" class="h-4 w-4"></i>
         </button>
       </div>
     </div>
@@ -432,15 +374,11 @@ function createWaterTypeCard(waterType) {
       <div class="grid grid-cols-2 gap-4">
         <div class="text-center p-2 bg-blue-500/10 rounded">
           <span class="text-gray-400 text-xs">Ambil Sendiri</span>
-          <p class="text-white font-medium">${formatCurrency(
-            waterType.price
-          )}</p>
+          <p class="text-white font-medium">${formatCurrency(waterType.price)}</p>
         </div>
         <div class="text-center p-2 bg-green-500/10 rounded">
           <span class="text-gray-400 text-xs">Antar ke Rumah</span>
-          <p class="text-white font-medium">${formatCurrency(
-            waterType.deliveryPrice || waterType.price
-          )}</p>
+          <p class="text-white font-medium">${formatCurrency(waterType.deliveryPrice || waterType.price)}</p>
         </div>
       </div>
       ${
@@ -457,226 +395,210 @@ function createWaterTypeCard(waterType) {
         Dibuat: ${formatDate(waterType.createdAt)}
       </div>
     </div>
-  `;
+  `
 
-  return card;
+  return card
 }
 
 function updateWaterTypeDropdowns() {
   // Update order form dropdown
-  const orderSelect = document.getElementById("order-water-type");
+  const orderSelect = document.getElementById("order-water-type")
   if (orderSelect) {
-    orderSelect.innerHTML = '<option value="">Pilih Jenis</option>';
+    orderSelect.innerHTML = '<option value="">Pilih Jenis</option>'
     waterTypes
       .filter((type) => type.isActive)
       .forEach((type) => {
-        const option = document.createElement("option");
-        option.value = type.name;
-        option.textContent = `${type.name}`;
-        option.dataset.pickupPrice = type.price;
-        option.dataset.deliveryPrice = type.deliveryPrice || type.price;
-        orderSelect.appendChild(option);
-      });
+        const option = document.createElement("option")
+        option.value = type.name
+        option.textContent = `${type.name}`
+        option.dataset.pickupPrice = type.price
+        option.dataset.deliveryPrice = type.deliveryPrice || type.price
+        orderSelect.appendChild(option)
+      })
   }
 }
 
 // Tambahkan fungsi baru untuk update harga berdasarkan delivery type
 window.updatePriceByDeliveryType = () => {
-  updatePriceBasedOnSelection();
-};
+  updatePriceBasedOnSelection()
+}
 
 window.updatePriceByWaterType = () => {
-  updatePriceBasedOnSelection();
-};
+  updatePriceBasedOnSelection()
+}
 
 function updatePriceBasedOnSelection() {
-  const deliveryType = document.getElementById("order-delivery-type")?.value;
-  const waterTypeSelect = document.getElementById("order-water-type");
-  const selectedOption = waterTypeSelect?.selectedOptions[0];
-  const priceInput = document.getElementById("order-price");
-  const quantityInput = document.getElementById("order-quantity");
+  const deliveryType = document.getElementById("order-delivery-type")?.value
+  const waterTypeSelect = document.getElementById("order-water-type")
+  const selectedOption = waterTypeSelect?.selectedOptions[0]
+  const priceInput = document.getElementById("order-price")
+  const quantityInput = document.getElementById("order-quantity")
 
   if (deliveryType && selectedOption && priceInput && quantityInput) {
-    const quantity = Number.parseInt(quantityInput.value) || 1;
-    let unitPrice = 0;
+    const quantity = Number.parseInt(quantityInput.value) || 1
+    let unitPrice = 0
 
     if (deliveryType === "pickup") {
-      unitPrice = Number.parseInt(selectedOption.dataset.pickupPrice) || 0;
+      unitPrice = Number.parseInt(selectedOption.dataset.pickupPrice) || 0
     } else if (deliveryType === "delivery") {
-      unitPrice = Number.parseInt(selectedOption.dataset.deliveryPrice) || 0;
+      unitPrice = Number.parseInt(selectedOption.dataset.deliveryPrice) || 0
     }
 
-    const totalPrice = unitPrice * quantity;
-    priceInput.value = new Intl.NumberFormat("id-ID").format(totalPrice);
+    const totalPrice = unitPrice * quantity
+    priceInput.value = new Intl.NumberFormat("id-ID").format(totalPrice)
   }
 }
 
 // Add quantity change handler
 window.updatePriceByQuantity = () => {
-  updatePriceBasedOnSelection();
-};
+  updatePriceBasedOnSelection()
+}
 
 // Water Type Modal Functions
-let currentEditingWaterType = null;
+let currentEditingWaterType = null
 
 function openWaterTypeModal(waterType = null) {
-  currentEditingWaterType = waterType;
+  currentEditingWaterType = waterType
 
-  const modal = document.getElementById("water-type-modal");
-  const title = document.getElementById("water-type-modal-title");
-  const submitText = document.getElementById("water-type-submit-text");
+  const modal = document.getElementById("water-type-modal")
+  const title = document.getElementById("water-type-modal-title")
+  const submitText = document.getElementById("water-type-submit-text")
 
   if (waterType && waterType.id) {
-    title.textContent = "Edit Jenis Air";
-    submitText.textContent = "Update";
-    fillWaterTypeForm(waterType);
+    title.textContent = "Edit Jenis Air"
+    submitText.textContent = "Update"
+    fillWaterTypeForm(waterType)
   } else {
-    title.textContent = "Tambah Jenis Air Baru";
-    submitText.textContent = "Simpan";
-    clearWaterTypeForm();
-    currentEditingWaterType = null;
+    title.textContent = "Tambah Jenis Air Baru"
+    submitText.textContent = "Simpan"
+    clearWaterTypeForm()
+    currentEditingWaterType = null
   }
 
-  modal.classList.remove("hidden");
+  modal.classList.remove("hidden")
 }
 
 function closeWaterTypeModal() {
-  const modal = document.getElementById("water-type-modal");
-  modal.classList.add("hidden");
-  currentEditingWaterType = null;
-  clearWaterTypeForm();
+  const modal = document.getElementById("water-type-modal")
+  modal.classList.add("hidden")
+  currentEditingWaterType = null
+  clearWaterTypeForm()
 }
 
 function fillWaterTypeForm(waterType) {
-  document.getElementById("water-type-name").value = waterType.name || "";
-  document.getElementById("water-type-price").value = waterType.price || "";
-  document.getElementById("water-type-delivery-price").value =
-    waterType.deliveryPrice || waterType.price || "";
-  document.getElementById("water-type-description").value =
-    waterType.description || "";
-  document.getElementById("water-type-active").checked =
-    waterType.isActive !== false;
+  document.getElementById("water-type-name").value = waterType.name || ""
+  document.getElementById("water-type-price").value = waterType.price || ""
+  document.getElementById("water-type-delivery-price").value = waterType.deliveryPrice || waterType.price || ""
+  document.getElementById("water-type-description").value = waterType.description || ""
+  document.getElementById("water-type-active").checked = waterType.isActive !== false
 }
 
 function clearWaterTypeForm() {
-  document.getElementById("water-type-form").reset();
-  document.getElementById("water-type-active").checked = true;
+  document.getElementById("water-type-form").reset()
+  document.getElementById("water-type-active").checked = true
 }
 
 async function handleWaterTypeSubmit(e) {
-  e.preventDefault();
+  e.preventDefault()
 
-  if (isLoading) return;
-  isLoading = true;
+  if (isLoading) return
+  isLoading = true
 
-  const submitBtn = e.target.querySelector('button[type="submit"]');
-  const originalText = submitBtn.textContent;
-  submitBtn.textContent = "Menyimpan...";
-  submitBtn.disabled = true;
+  const submitBtn = e.target.querySelector('button[type="submit"]')
+  const originalText = submitBtn.textContent
+  submitBtn.textContent = "Menyimpan..."
+  submitBtn.disabled = true
 
   try {
     const formData = {
       name: document.getElementById("water-type-name").value,
       price: Number.parseInt(document.getElementById("water-type-price").value),
-      deliveryPrice: Number.parseInt(
-        document.getElementById("water-type-delivery-price").value
-      ),
+      deliveryPrice: Number.parseInt(document.getElementById("water-type-delivery-price").value),
       description: document.getElementById("water-type-description").value,
       isActive: document.getElementById("water-type-active").checked,
       updatedAt: new Date().toISOString(),
-    };
+    }
 
     if (currentEditingWaterType && currentEditingWaterType.id) {
       // Update existing water type
-      await window.updateDoc(
-        window.doc(window.db, "water_types", currentEditingWaterType.id),
-        {
-          ...formData,
-          createdAt: currentEditingWaterType.createdAt,
-        }
-      );
-      showToast("✅ Jenis air berhasil diperbarui");
+      await window.updateDoc(window.doc(window.db, "water_types", currentEditingWaterType.id), {
+        ...formData,
+        createdAt: currentEditingWaterType.createdAt,
+      })
+      showToast("✅ Jenis air berhasil diperbarui")
     } else {
       // Add new water type
-      formData.createdAt = new Date().toISOString();
-      await window.addDoc(
-        window.collection(window.db, "water_types"),
-        formData
-      );
-      showToast("✅ Jenis air baru berhasil ditambahkan");
+      formData.createdAt = new Date().toISOString()
+      await window.addDoc(window.collection(window.db, "water_types"), formData)
+      showToast("✅ Jenis air baru berhasil ditambahkan")
     }
 
-    closeWaterTypeModal();
-    await loadWaterTypes();
+    closeWaterTypeModal()
+    await loadWaterTypes()
   } catch (error) {
-    console.error("❌ Error saving water type:", error);
-    showToast("❌ Error menyimpan: " + error.message, "error");
+    console.error("❌ Error saving water type:", error)
+    showToast("❌ Error menyimpan: " + error.message, "error")
   } finally {
-    submitBtn.textContent = originalText;
-    submitBtn.disabled = false;
-    isLoading = false;
+    submitBtn.textContent = originalText
+    submitBtn.disabled = false
+    isLoading = false
   }
 }
 
 // Global functions for water type actions
 window.editWaterType = (waterTypeId) => {
-  const waterType = waterTypes.find((w) => w.id === waterTypeId);
+  const waterType = waterTypes.find((w) => w.id === waterTypeId)
   if (waterType) {
-    openWaterTypeModal(waterType);
+    openWaterTypeModal(waterType)
   }
-};
+}
 
 window.deleteWaterType = async (waterTypeId) => {
   if (!confirm("Apakah Anda yakin ingin menghapus jenis air ini?")) {
-    return;
+    return
   }
 
   try {
-    await window.deleteDoc(window.doc(window.db, "water_types", waterTypeId));
-    showToast("✅ Jenis air berhasil dihapus");
-    await loadWaterTypes();
+    await window.deleteDoc(window.doc(window.db, "water_types", waterTypeId))
+    showToast("✅ Jenis air berhasil dihapus")
+    await loadWaterTypes()
   } catch (error) {
-    console.error("❌ Error deleting water type:", error);
-    showToast("❌ Error menghapus: " + error.message, "error");
+    console.error("❌ Error deleting water type:", error)
+    showToast("❌ Error menghapus: " + error.message, "error")
   }
-};
+}
 
 window.toggleWaterTypeStatus = async (waterTypeId, currentStatus) => {
   try {
     await window.updateDoc(window.doc(window.db, "water_types", waterTypeId), {
       isActive: !currentStatus,
       updatedAt: new Date().toISOString(),
-    });
-    showToast(
-      `✅ Status jenis air berhasil ${
-        !currentStatus ? "diaktifkan" : "dinonaktifkan"
-      }`
-    );
-    await loadWaterTypes();
+    })
+    showToast(`✅ Status jenis air berhasil ${!currentStatus ? "diaktifkan" : "dinonaktifkan"}`)
+    await loadWaterTypes()
   } catch (error) {
-    console.error("❌ Error updating water type status:", error);
-    showToast("❌ Error mengubah status jenis air", "error");
+    console.error("❌ Error updating water type status:", error)
+    showToast("❌ Error mengubah status jenis air", "error")
   }
-};
+}
 
 // Test Firebase Connection
 async function testFirebaseConnection() {
   try {
-    console.log("🧪 Testing Firebase connection...");
-    const testCollection = window.collection(window.db, "test");
-    await window.getDocs(testCollection);
-    console.log("✅ Firebase connection successful!");
+    console.log("🧪 Testing Firebase connection...")
+    const testCollection = window.collection(window.db, "test")
+    await window.getDocs(testCollection)
+    console.log("✅ Firebase connection successful!")
   } catch (error) {
-    console.error("❌ Firebase connection failed:", error);
-    throw error;
+    console.error("❌ Firebase connection failed:", error)
+    throw error
   }
 }
 
 // Show Firebase Rules Help
 function showFirebaseRulesHelp() {
-  const helpDiv = document.createElement("div");
-  helpDiv.className =
-    "fixed top-4 left-4 right-4 bg-red-500/10 border border-red-500/20 rounded-lg p-4 z-50";
+  const helpDiv = document.createElement("div")
+  helpDiv.className = "fixed top-4 left-4 right-4 bg-red-500/10 border border-red-500/20 rounded-lg p-4 z-50"
   helpDiv.innerHTML = `
         <div class="flex items-start gap-3">
             <div class="text-red-400 text-2xl">🔥</div>
@@ -695,44 +617,42 @@ function showFirebaseRulesHelp() {
                 </button>
             </div>
         </div>
-    `;
-  document.body.appendChild(helpDiv);
+    `
+  document.body.appendChild(helpDiv)
 
   // Auto remove after 30 seconds
   setTimeout(() => {
     if (helpDiv.parentElement) {
-      helpDiv.remove();
+      helpDiv.remove()
     }
-  }, 30000);
+  }, 30000)
 }
 
 // Customer Management Functions with better error handling
 async function loadCustomers() {
   try {
-    console.log("📥 Loading customers from Firestore...");
-    const querySnapshot = await window.getDocs(
-      window.collection(window.db, "customers")
-    );
-    customers = [];
+    console.log("📥 Loading customers from Firestore...")
+    const querySnapshot = await window.getDocs(window.collection(window.db, "customers"))
+    customers = []
     querySnapshot.forEach((doc) => {
-      customers.push({ id: doc.id, ...doc.data() });
-    });
+      customers.push({ id: doc.id, ...doc.data() })
+    })
 
-    console.log(`✅ Loaded ${customers.length} customers`);
-    renderCustomers();
-    updateCustomerStats();
+    console.log(`✅ Loaded ${customers.length} customers`)
+    renderCustomers()
+    updateCustomerStats()
   } catch (error) {
-    console.error("❌ Error loading customers:", error);
+    console.error("❌ Error loading customers:", error)
 
     if (error.code === "permission-denied") {
-      showToast("❌ Permission denied. Periksa Firestore Rules!", "error");
-      showFirebaseRulesHelp();
+      showToast("❌ Permission denied. Periksa Firestore Rules!", "error")
+      showFirebaseRulesHelp()
     } else {
-      showToast("❌ Error loading customers: " + error.message, "error");
+      showToast("❌ Error loading customers: " + error.message, "error")
     }
 
     // Show empty state
-    const grid = document.getElementById("customers-grid");
+    const grid = document.getElementById("customers-grid")
     if (grid) {
       grid.innerHTML = `
                 <div class="col-span-full text-center py-12">
@@ -743,7 +663,7 @@ async function loadCustomers() {
                         Coba Lagi
                     </button>
                 </div>
-            `;
+            `
     }
   }
 }
@@ -751,30 +671,28 @@ async function loadCustomers() {
 // Courier Management Functions
 async function loadCouriers() {
   try {
-    console.log("🚚 Loading couriers from Firestore...");
-    const querySnapshot = await window.getDocs(
-      window.collection(window.db, "couriers")
-    );
-    couriers = [];
+    console.log("🚚 Loading couriers from Firestore...")
+    const querySnapshot = await window.getDocs(window.collection(window.db, "couriers"))
+    couriers = []
     querySnapshot.forEach((doc) => {
-      couriers.push({ id: doc.id, ...doc.data() });
-    });
+      couriers.push({ id: doc.id, ...doc.data() })
+    })
 
-    console.log(`✅ Loaded ${couriers.length} couriers`);
-    renderCouriers();
-    updateCourierStats();
+    console.log(`✅ Loaded ${couriers.length} couriers`)
+    renderCouriers()
+    updateCourierStats()
   } catch (error) {
-    console.error("❌ Error loading couriers:", error);
+    console.error("❌ Error loading couriers:", error)
 
     if (error.code === "permission-denied") {
-      showToast("❌ Permission denied. Periksa Firestore Rules!", "error");
-      showFirebaseRulesHelp();
+      showToast("❌ Permission denied. Periksa Firestore Rules!", "error")
+      showFirebaseRulesHelp()
     } else {
-      showToast("❌ Error loading couriers: " + error.message, "error");
+      showToast("❌ Error loading couriers: " + error.message, "error")
     }
 
     // Show empty state
-    const grid = document.getElementById("couriers-grid");
+    const grid = document.getElementById("couriers-grid")
     if (grid) {
       grid.innerHTML = `
                 <div class="col-span-full text-center py-12">
@@ -785,14 +703,14 @@ async function loadCouriers() {
                         Coba Lagi
                     </button>
                 </div>
-            `;
+            `
     }
   }
 }
 
 function renderCouriers() {
-  const grid = document.getElementById("couriers-grid");
-  if (!grid) return;
+  const grid = document.getElementById("couriers-grid")
+  if (!grid) return
 
   if (couriers.length === 0) {
     grid.innerHTML = `
@@ -801,28 +719,28 @@ function renderCouriers() {
                 <p class="text-white text-lg">Belum ada kurir</p>
                 <p class="text-gray-400 text-sm mt-2">Klik "Tambah Kurir" untuk memulai</p>
             </div>
-        `;
-    return;
+        `
+    return
   }
 
-  grid.innerHTML = "";
+  grid.innerHTML = ""
 
   couriers.forEach((courier) => {
-    const courierCard = createCourierCard(courier);
-    grid.appendChild(courierCard);
-  });
+    const courierCard = createCourierCard(courier)
+    grid.appendChild(courierCard)
+  })
 
   // Re-initialize Lucide icons
-  lucide.createIcons();
+  lucide.createIcons()
 }
 
 function createCourierCard(courier) {
-  const card = document.createElement("div");
-  card.className = "glass-card p-6 rounded-lg courier-card animate-fade-in";
+  const card = document.createElement("div")
+  card.className = "glass-card p-6 rounded-lg courier-card animate-fade-in"
 
   const statusClass = courier.isActive
     ? "bg-green-500/20 text-green-400 border-green-500/30"
-    : "bg-red-500/20 text-red-400 border-red-500/30";
+    : "bg-red-500/20 text-red-400 border-red-500/30"
 
   card.innerHTML = `
         <div class="flex items-start justify-between mb-4">
@@ -835,9 +753,7 @@ function createCourierCard(courier) {
                     }
                 </div>
                 <div class="min-w-0 flex-1">
-                    <h3 class="text-white text-lg font-semibold truncate">${
-                      courier.name
-                    }</h3>
+                    <h3 class="text-white text-lg font-semibold truncate">${courier.name}</h3>
                     <span class="inline-block px-2 py-1 text-xs rounded-full ${statusClass}">
                         ${courier.isActive ? "Aktif" : "Tidak Aktif"}
                     </span>
@@ -855,11 +771,9 @@ function createCourierCard(courier) {
                     <i data-lucide="trash-2" class="h-4 w-4"></i>
                 </button>
                 <button onclick="toggleCourierStatus('${courier.id}', ${
-    courier.isActive
-  })" class="p-2 text-gray-400 hover:text-blue-400 hover:bg-blue-500/10 rounded">
-                    <i data-lucide="${
-                      courier.isActive ? "pause" : "play"
-                    }" class="h-4 w-4"></i>
+                  courier.isActive
+                })" class="p-2 text-gray-400 hover:text-blue-400 hover:bg-blue-500/10 rounded">
+                    <i data-lucide="${courier.isActive ? "pause" : "play"}" class="h-4 w-4"></i>
                 </button>
             </div>
         </div>
@@ -884,30 +798,22 @@ function createCourierCard(courier) {
             <div class="grid grid-cols-2 gap-2 pt-2 border-t border-white/10 text-sm">
                 <div>
                     <span class="text-gray-400">Total Delivery:</span>
-                    <div class="text-white font-medium">${
-                      courier.totalDeliveries || 0
-                    }x</div>
+                    <div class="text-white font-medium">${courier.totalDeliveries || 0}x</div>
                 </div>
                 <div>
                     <span class="text-gray-400">Minggu Ini:</span>
-                    <div class="text-white font-medium">${
-                      courier.weeklyDeliveries || 0
-                    }x</div>
+                    <div class="text-white font-medium">${courier.weeklyDeliveries || 0}x</div>
                 </div>
             </div>
 
             <div class="grid grid-cols-2 gap-2 text-sm">
                 <div>
                     <span class="text-gray-400">Hari Ini:</span>
-                    <div class="text-white font-medium">${
-                      courier.dailyDeliveries || 0
-                    }x</div>
+                    <div class="text-white font-medium">${courier.dailyDeliveries || 0}x</div>
                 </div>
                 <div>
                     <span class="text-gray-400">Rating:</span>
-                    <div class="text-yellow-400 font-medium">⭐ ${
-                      courier.rating || "5.0"
-                    }</div>
+                    <div class="text-yellow-400 font-medium">⭐ ${courier.rating || "5.0"}</div>
                 </div>
             </div>
 
@@ -915,41 +821,33 @@ function createCourierCard(courier) {
                 Bergabung: ${formatDate(courier.createdAt)}
             </div>
         </div>
-    `;
+    `
 
-  return card;
+  return card
 }
 
 function updateCourierStats() {
-  const total = couriers.length;
-  const active = couriers.filter((c) => c.isActive).length;
-  const weeklyDelivery = couriers.reduce(
-    (sum, c) => sum + (c.weeklyDeliveries || 0),
-    0
-  );
-  const dailyDelivery = couriers.reduce(
-    (sum, c) => sum + (c.dailyDeliveries || 0),
-    0
-  );
+  const total = couriers.length
+  const active = couriers.filter((c) => c.isActive).length
+  const weeklyDelivery = couriers.reduce((sum, c) => sum + (c.weeklyDeliveries || 0), 0)
+  const dailyDelivery = couriers.reduce((sum, c) => sum + (c.dailyDeliveries || 0), 0)
 
-  document.getElementById("couriers-total").textContent = total;
-  document.getElementById("couriers-active").textContent = active;
-  document.getElementById("couriers-weekly-delivery").textContent =
-    weeklyDelivery;
-  document.getElementById("couriers-daily-delivery").textContent =
-    dailyDelivery;
+  document.getElementById("couriers-total").textContent = total
+  document.getElementById("couriers-active").textContent = active
+  document.getElementById("couriers-weekly-delivery").textContent = weeklyDelivery
+  document.getElementById("couriers-daily-delivery").textContent = dailyDelivery
 }
 
 function handleCourierSearch(e) {
-  const searchTerm = e.target.value.toLowerCase();
+  const searchTerm = e.target.value.toLowerCase()
   const filteredCouriers = couriers.filter(
     (courier) =>
       courier.name.toLowerCase().includes(searchTerm) ||
-      (courier.phone && courier.phone.toLowerCase().includes(searchTerm))
-  );
+      (courier.phone && courier.phone.toLowerCase().includes(searchTerm)),
+  )
 
-  const grid = document.getElementById("couriers-grid");
-  grid.innerHTML = "";
+  const grid = document.getElementById("couriers-grid")
+  grid.innerHTML = ""
 
   if (filteredCouriers.length === 0) {
     grid.innerHTML = `
@@ -958,74 +856,73 @@ function handleCourierSearch(e) {
                 <p class="text-white text-lg">Tidak ada kurir ditemukan</p>
                 <p class="text-gray-400 text-sm mt-2">Coba kata kunci lain</p>
             </div>
-        `;
-    return;
+        `
+    return
   }
 
   filteredCouriers.forEach((courier) => {
-    const courierCard = createCourierCard(courier);
-    grid.appendChild(courierCard);
-  });
+    const courierCard = createCourierCard(courier)
+    grid.appendChild(courierCard)
+  })
 
-  lucide.createIcons();
+  lucide.createIcons()
 }
 
 // Courier Modal Functions
 function openCourierModal(courier = null) {
-  currentEditingCourier = courier;
+  currentEditingCourier = courier
 
-  const modal = document.getElementById("courier-modal");
-  const title = document.getElementById("courier-modal-title");
-  const submitText = document.getElementById("courier-submit-text");
+  const modal = document.getElementById("courier-modal")
+  const title = document.getElementById("courier-modal-title")
+  const submitText = document.getElementById("courier-submit-text")
 
   if (courier && courier.id) {
-    console.log("📝 Edit mode for courier:", courier.id);
-    title.textContent = "Edit Kurir";
-    submitText.textContent = "Update";
-    fillCourierForm(courier);
+    console.log("📝 Edit mode for courier:", courier.id)
+    title.textContent = "Edit Kurir"
+    submitText.textContent = "Update"
+    fillCourierForm(courier)
   } else {
-    console.log("➕ Add new courier mode");
-    title.textContent = "Tambah Kurir Baru";
-    submitText.textContent = "Simpan";
-    clearCourierForm();
-    currentEditingCourier = null;
+    console.log("➕ Add new courier mode")
+    title.textContent = "Tambah Kurir Baru"
+    submitText.textContent = "Simpan"
+    clearCourierForm()
+    currentEditingCourier = null
   }
 
-  modal.classList.remove("hidden");
-  modal.querySelector(".bg-slate-900").classList.add("modal-enter");
+  modal.classList.remove("hidden")
+  modal.querySelector(".bg-slate-900").classList.add("modal-enter")
 }
 
 function closeCourierModal() {
-  const modal = document.getElementById("courier-modal");
-  modal.classList.add("hidden");
-  currentEditingCourier = null;
-  clearCourierForm();
+  const modal = document.getElementById("courier-modal")
+  modal.classList.add("hidden")
+  currentEditingCourier = null
+  clearCourierForm()
 }
 
 function fillCourierForm(courier) {
-  document.getElementById("courier-name").value = courier.name || "";
-  document.getElementById("courier-phone").value = courier.phone || "";
-  document.getElementById("courier-username").value = courier.username || "";
-  document.getElementById("courier-password").value = courier.password || "";
-  document.getElementById("courier-active").checked =
-    courier.isActive !== false;
+  document.getElementById("courier-name").value = courier.name || ""
+  document.getElementById("courier-phone").value = courier.phone || ""
+  document.getElementById("courier-username").value = courier.username || ""
+  document.getElementById("courier-password").value = courier.password || ""
+  document.getElementById("courier-active").checked = courier.isActive !== false
 }
 
 function clearCourierForm() {
-  document.getElementById("courier-form").reset();
-  document.getElementById("courier-active").checked = true;
+  document.getElementById("courier-form").reset()
+  document.getElementById("courier-active").checked = true
 }
 
 async function handleCourierSubmit(e) {
-  e.preventDefault();
+  e.preventDefault()
 
-  if (isLoading) return;
-  isLoading = true;
+  if (isLoading) return
+  isLoading = true
 
-  const submitBtn = e.target.querySelector('button[type="submit"]');
-  const originalText = submitBtn.textContent;
-  submitBtn.textContent = "Menyimpan...";
-  submitBtn.disabled = true;
+  const submitBtn = e.target.querySelector('button[type="submit"]')
+  const originalText = submitBtn.textContent
+  submitBtn.textContent = "Menyimpan..."
+  submitBtn.disabled = true
 
   try {
     const formData = {
@@ -1040,115 +937,102 @@ async function handleCourierSubmit(e) {
       rating: 5.0,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-    };
+    }
 
     // Handle photo upload
-    const photoFile = document.getElementById("courier-photo").files[0];
+    const photoFile = document.getElementById("courier-photo").files[0]
     if (photoFile) {
       try {
-        const photoUrl = await uploadToDiscord(
-          photoFile,
-          `Foto kurir ${formData.name}`
-        );
-        formData.photo = photoUrl;
+        const photoUrl = await uploadToDiscord(photoFile, `Foto kurir ${formData.name}`)
+        formData.photo = photoUrl
       } catch (uploadError) {
-        console.warn("Photo upload failed:", uploadError);
-        showToast(
-          "⚠️ Foto gagal diupload, data kurir tetap disimpan",
-          "warning"
-        );
+        console.warn("Photo upload failed:", uploadError)
+        showToast("⚠️ Foto gagal diupload, data kurir tetap disimpan", "warning")
       }
     }
 
     if (currentEditingCourier && currentEditingCourier.id) {
       // Update existing courier
-      console.log("🔄 Updating courier:", currentEditingCourier.id);
-      await window.updateDoc(
-        window.doc(window.db, "couriers", currentEditingCourier.id),
-        {
-          ...formData,
-          createdAt: currentEditingCourier.createdAt,
-          totalDeliveries: currentEditingCourier.totalDeliveries || 0,
-          weeklyDeliveries: currentEditingCourier.weeklyDeliveries || 0,
-          dailyDeliveries: currentEditingCourier.dailyDeliveries || 0,
-        }
-      );
-      showToast("✅ Data kurir berhasil diperbarui");
+      console.log("🔄 Updating courier:", currentEditingCourier.id)
+      await window.updateDoc(window.doc(window.db, "couriers", currentEditingCourier.id), {
+        ...formData,
+        createdAt: currentEditingCourier.createdAt,
+        totalDeliveries: currentEditingCourier.totalDeliveries || 0,
+        weeklyDeliveries: currentEditingCourier.weeklyDeliveries || 0,
+        dailyDeliveries: currentEditingCourier.dailyDeliveries || 0,
+      })
+      showToast("✅ Data kurir berhasil diperbarui")
     } else {
       // Add new courier
-      console.log("➕ Adding new courier:", formData.name);
-      await window.addDoc(window.collection(window.db, "couriers"), formData);
-      showToast("✅ Kurir baru berhasil ditambahkan");
+      console.log("➕ Adding new courier:", formData.name)
+      await window.addDoc(window.collection(window.db, "couriers"), formData)
+      showToast("✅ Kurir baru berhasil ditambahkan")
     }
 
-    closeCourierModal();
-    await loadCouriers();
-    updateDashboardStats();
+    closeCourierModal()
+    await loadCouriers()
+    updateDashboardStats()
   } catch (error) {
-    console.error("❌ Error saving courier:", error);
+    console.error("❌ Error saving courier:", error)
     if (error.code === "permission-denied") {
-      showToast("❌ Permission denied. Periksa Firestore Rules!", "error");
-      showFirebaseRulesHelp();
+      showToast("❌ Permission denied. Periksa Firestore Rules!", "error")
+      showFirebaseRulesHelp()
     } else {
-      showToast("❌ Error menyimpan: " + error.message, "error");
+      showToast("❌ Error menyimpan: " + error.message, "error")
     }
   } finally {
-    submitBtn.textContent = originalText;
-    submitBtn.disabled = false;
-    isLoading = false;
+    submitBtn.textContent = originalText
+    submitBtn.disabled = false
+    isLoading = false
   }
 }
 
 // Global functions for courier actions
 window.editCourier = (courierId) => {
-  const courier = couriers.find((c) => c.id === courierId);
+  const courier = couriers.find((c) => c.id === courierId)
   if (courier) {
-    openCourierModal(courier);
+    openCourierModal(courier)
   }
-};
+}
 
 window.deleteCourier = async (courierId) => {
   if (!confirm("Apakah Anda yakin ingin menghapus kurir ini?")) {
-    return;
+    return
   }
 
   try {
-    await window.deleteDoc(window.doc(window.db, "couriers", courierId));
-    showToast("✅ Kurir berhasil dihapus");
-    await loadCouriers();
-    updateDashboardStats();
+    await window.deleteDoc(window.doc(window.db, "couriers", courierId))
+    showToast("✅ Kurir berhasil dihapus")
+    await loadCouriers()
+    updateDashboardStats()
   } catch (error) {
-    console.error("❌ Error deleting courier:", error);
+    console.error("❌ Error deleting courier:", error)
     if (error.code === "permission-denied") {
-      showToast("❌ Permission denied. Periksa Firestore Rules!", "error");
-      showFirebaseRulesHelp();
+      showToast("❌ Permission denied. Periksa Firestore Rules!", "error")
+      showFirebaseRulesHelp()
     } else {
-      showToast("❌ Error menghapus: " + error.message, "error");
+      showToast("❌ Error menghapus: " + error.message, "error")
     }
   }
-};
+}
 
 window.toggleCourierStatus = async (courierId, currentStatus) => {
   try {
     await window.updateDoc(window.doc(window.db, "couriers", courierId), {
       isActive: !currentStatus,
       updatedAt: new Date().toISOString(),
-    });
-    showToast(
-      `✅ Status kurir berhasil ${
-        !currentStatus ? "diaktifkan" : "dinonaktifkan"
-      }`
-    );
-    await loadCouriers();
+    })
+    showToast(`✅ Status kurir berhasil ${!currentStatus ? "diaktifkan" : "dinonaktifkan"}`)
+    await loadCouriers()
   } catch (error) {
-    console.error("❌ Error updating courier status:", error);
-    showToast("❌ Error mengubah status kurir", "error");
+    console.error("❌ Error updating courier status:", error)
+    showToast("❌ Error mengubah status kurir", "error")
   }
-};
+}
 
 function renderCustomers() {
-  const grid = document.getElementById("customers-grid");
-  if (!grid) return;
+  const grid = document.getElementById("customers-grid")
+  if (!grid) return
 
   if (customers.length === 0) {
     grid.innerHTML = `
@@ -1157,38 +1041,34 @@ function renderCustomers() {
                 <p class="text-white text-lg">Belum ada pelanggan</p>
                 <p class="text-gray-400 text-sm mt-2">Klik "Tambah Pelanggan" untuk memulai</p>
             </div>
-        `;
-    return;
+        `
+    return
   }
 
-  grid.innerHTML = "";
+  grid.innerHTML = ""
 
   customers.forEach((customer) => {
-    const customerCard = createCustomerCard(customer);
-    grid.appendChild(customerCard);
-  });
+    const customerCard = createCustomerCard(customer)
+    grid.appendChild(customerCard)
+  })
 
   // Re-initialize Lucide icons
-  lucide.createIcons();
+  lucide.createIcons()
 }
 
 function createCustomerCard(customer) {
-  const card = document.createElement("div");
-  card.className = "glass-card p-6 rounded-lg customer-card animate-fade-in";
+  const card = document.createElement("div")
+  card.className = "glass-card p-6 rounded-lg customer-card animate-fade-in"
 
-  const statusClass = getStatusClass(customer.status);
+  const statusClass = getStatusClass(customer.status)
 
   // Calculate customer's total orders from orders array
-  const customerOrders = orders.filter(
-    (order) => order.customerId === customer.id
-  );
-  const totalOrders = customerOrders.length;
+  const customerOrders = orders.filter((order) => order.customerId === customer.id)
+  const totalOrders = customerOrders.length
   const lastOrderDate =
     customerOrders.length > 0
-      ? customerOrders.sort(
-          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-        )[0].createdAt
-      : customer.lastOrder;
+      ? customerOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0].createdAt
+      : customer.lastOrder
 
   card.innerHTML = `
         <div class="flex items-start justify-between mb-4">
@@ -1203,12 +1083,10 @@ function createCustomerCard(customer) {
                          onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'100\\' viewBox=\\'0 0 100 100\\'%3E%3Crect width=\\'100\\' height=\\'100\\' fill=\\'%23374151\\'/%3E%3Ctext x=\\'50\\' y=\\'60\\' font-size=\\'30\\' text-anchor=\\'middle\\' fill=\\'%239CA3AF\\'%3E🏠%3C/text%3E%3C/svg\\'%3E'">
                 </div>
                 <div class="min-w-0 flex-1">
-                    <h3 class="text-white text-lg font-semibold truncate">${
-                      customer.name
-                    }</h3>
+                    <h3 class="text-white text-lg font-semibold truncate">${customer.name}</h3>
                     <span class="inline-block px-2 py-1 text-xs rounded-full ${statusClass}">${
-    customer.status || "Aktif"
-  }</span>
+                      customer.status || "Aktif"
+                    }</span>
                 </div>
             </div>
             <div class="flex gap-1">
@@ -1259,9 +1137,7 @@ function createCustomerCard(customer) {
                 </div>
                 <div>
                     <span class="text-gray-400">Terakhir:</span>
-                    <div class="text-white text-xs">${formatDate(
-                      lastOrderDate
-                    )}</div>
+                    <div class="text-white text-xs">${formatDate(lastOrderDate)}</div>
                 </div>
             </div>
 
@@ -1275,46 +1151,45 @@ function createCustomerCard(customer) {
                 : ""
             }
         </div>
-    `;
+    `
 
-  return card;
+  return card
 }
 
 function getStatusClass(status) {
   switch (status) {
     case "Aktif":
-      return "status-active";
+      return "status-active"
     case "Pasif":
-      return "status-passive";
+      return "status-passive"
     case "Tidak Aktif":
-      return "status-inactive";
+      return "status-inactive"
     default:
-      return "bg-gray-500/20 text-gray-400 border-gray-500/30";
+      return "bg-gray-500/20 text-gray-400 border-gray-500/30"
   }
 }
 
 function updateCustomerStats() {
-  const total = customers.length;
-  const active = customers.filter((c) => c.status === "Aktif").length;
-  const passive = customers.filter((c) => c.status === "Pasif").length;
-  const inactive = customers.filter((c) => c.status === "Tidak Aktif").length;
+  const total = customers.length
+  const active = customers.filter((c) => c.status === "Aktif").length
+  const passive = customers.filter((c) => c.status === "Pasif").length
+  const inactive = customers.filter((c) => c.status === "Tidak Aktif").length
 
-  document.getElementById("customers-total").textContent = total;
-  document.getElementById("customers-active").textContent = active;
-  document.getElementById("customers-passive").textContent = passive;
-  document.getElementById("customers-inactive").textContent = inactive;
+  document.getElementById("customers-total").textContent = total
+  document.getElementById("customers-active").textContent = active
+  document.getElementById("customers-passive").textContent = passive
+  document.getElementById("customers-inactive").textContent = inactive
 }
 
 function handleCustomerSearch(e) {
-  const searchTerm = e.target.value.toLowerCase();
+  const searchTerm = e.target.value.toLowerCase()
   const filteredCustomers = customers.filter(
     (customer) =>
-      customer.name.toLowerCase().includes(searchTerm) ||
-      customer.address.toLowerCase().includes(searchTerm)
-  );
+      customer.name.toLowerCase().includes(searchTerm) || customer.address.toLowerCase().includes(searchTerm),
+  )
 
-  const grid = document.getElementById("customers-grid");
-  grid.innerHTML = "";
+  const grid = document.getElementById("customers-grid")
+  grid.innerHTML = ""
 
   if (filteredCustomers.length === 0) {
     grid.innerHTML = `
@@ -1323,75 +1198,75 @@ function handleCustomerSearch(e) {
                 <p class="text-white text-lg">Tidak ada pelanggan ditemukan</p>
                 <p class="text-gray-400 text-sm mt-2">Coba kata kunci lain</p>
             </div>
-        `;
-    return;
+        `
+    return
   }
 
   filteredCustomers.forEach((customer) => {
-    const customerCard = createCustomerCard(customer);
-    grid.appendChild(customerCard);
-  });
+    const customerCard = createCustomerCard(customer)
+    grid.appendChild(customerCard)
+  })
 
-  lucide.createIcons();
+  lucide.createIcons()
 }
 
 // Customer Modal Functions
 function openCustomerModal(customer = null) {
   // Reset currentEditingCustomer first
-  currentEditingCustomer = customer;
+  currentEditingCustomer = customer
 
-  const modal = document.getElementById("customer-modal");
-  const title = document.getElementById("customer-modal-title");
-  const submitText = document.getElementById("customer-submit-text");
+  const modal = document.getElementById("customer-modal")
+  const title = document.getElementById("customer-modal-title")
+  const submitText = document.getElementById("customer-submit-text")
 
   if (customer && customer.id) {
     // Edit mode
-    console.log("📝 Edit mode for customer:", customer.id);
-    title.textContent = "Edit Pelanggan";
-    submitText.textContent = "Update";
-    fillCustomerForm(customer);
+    console.log("📝 Edit mode for customer:", customer.id)
+    title.textContent = "Edit Pelanggan"
+    submitText.textContent = "Update"
+    fillCustomerForm(customer)
   } else {
     // Add new mode
-    console.log("➕ Add new customer mode");
-    title.textContent = "Tambah Pelanggan Baru";
-    submitText.textContent = "Simpan";
-    clearCustomerForm();
-    currentEditingCustomer = null; // Explicitly set to null for new customer
+    console.log("➕ Add new customer mode")
+    title.textContent = "Tambah Pelanggan Baru"
+    submitText.textContent = "Simpan"
+    clearCustomerForm()
+    currentEditingCustomer = null // Explicitly set to null for new customer
   }
 
-  modal.classList.remove("hidden");
-  modal.querySelector(".bg-slate-900").classList.add("modal-enter");
+  modal.classList.remove("hidden")
+  modal.querySelector(".bg-slate-900").classList.add("modal-enter")
 }
 
 function closeCustomerModal() {
-  const modal = document.getElementById("customer-modal");
-  modal.classList.add("hidden");
-  currentEditingCustomer = null;
-  clearCustomerForm();
+  const modal = document.getElementById("customer-modal")
+  modal.classList.add("hidden")
+  currentEditingCustomer = null
+  clearCustomerForm()
 }
 
 function fillCustomerForm(customer) {
-  document.getElementById("customer-name").value = customer.name || "";
-  document.getElementById("customer-phone").value = customer.phone || "";
-  document.getElementById("customer-address").value = customer.address || "";
-  document.getElementById("customer-map").value = customer.mapLink || "";
-  document.getElementById("customer-notes").value = customer.notes || "";
+  document.getElementById("customer-name").value = customer.name || ""
+  document.getElementById("customer-phone").value = customer.phone || ""
+  document.getElementById("customer-address").value = customer.address || ""
+  document.getElementById("customer-map").value = customer.mapLink || ""
+  document.getElementById("customer-notes").value = customer.notes || ""
 }
 
 function clearCustomerForm() {
-  document.getElementById("customer-form").reset();
+  document.getElementById("customer-form").reset()
 }
 
 async function handleCustomerSubmit(e) {
-  e.preventDefault();
+  e.preventDefault()
 
-  if (isLoading) return;
-  isLoading = true;
+  if (isLoading) return
+  isLoading = true
 
-  const submitBtn = e.target.querySelector('button[type="submit"]');
-  const originalText = submitBtn.textContent;
-  submitBtn.textContent = "Menyimpan...";
-  submitBtn.disabled = true;
+  const submitBtn = e.target.querySelector('button[type="submit"]')
+  const originalText = submitBtn.textContent
+  submitBtn.textContent = "Menyimpan..."
+  submitBtn.disabled = true
 
   try {
     const formData = {
@@ -1405,98 +1280,89 @@ async function handleCustomerSubmit(e) {
       lastOrder: new Date().toISOString(),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-    };
+    }
 
     // Handle photo upload with improved Discord webhook
-    const photoFile = document.getElementById("customer-photo").files[0];
+    const photoFile = document.getElementById("customer-photo").files[0]
     if (photoFile) {
       try {
-        console.log("📤 Uploading customer photo:", photoFile.name);
-        const photoUrl = await uploadToDiscordImproved(
-          photoFile,
-          `Foto rumah ${formData.name}`
-        );
-        formData.housePhoto = photoUrl;
-        console.log("✅ Photo uploaded successfully:", photoUrl);
+        console.log("📤 Uploading customer photo:", photoFile.name)
+        const photoUrl = await uploadToDiscordImproved(photoFile, `Foto rumah ${formData.name}`)
+        formData.housePhoto = photoUrl
+        console.log("✅ Photo uploaded successfully:", photoUrl)
       } catch (uploadError) {
-        console.warn("Photo upload failed:", uploadError);
-        showToast(
-          "⚠️ Foto gagal diupload, data pelanggan tetap disimpan",
-          "warning"
-        );
+        console.warn("Photo upload failed:", uploadError)
+        showToast("⚠️ Foto gagal diupload, data pelanggan tetap disimpan", "warning")
       }
     }
 
     // Check if this is edit or add new customer
     if (currentEditingCustomer && currentEditingCustomer.id) {
       // Update existing customer
-      console.log("🔄 Updating customer:", currentEditingCustomer.id);
-      await window.updateDoc(
-        window.doc(window.db, "customers", currentEditingCustomer.id),
-        {
-          ...formData,
-          createdAt: currentEditingCustomer.createdAt, // Keep original creation date
-        }
-      );
-      showToast("✅ Data pelanggan berhasil diperbarui");
+      console.log("🔄 Updating customer:", currentEditingCustomer.id)
+      await window.updateDoc(window.doc(window.db, "customers", currentEditingCustomer.id), {
+        ...formData,
+        createdAt: currentEditingCustomer.createdAt, // Keep original creation date
+      })
+      showToast("✅ Data pelanggan berhasil diperbarui")
     } else {
       // Add new customer
-      console.log("➕ Adding new customer:", formData.name);
-      await window.addDoc(window.collection(window.db, "customers"), formData);
-      showToast("✅ Pelanggan baru berhasil ditambahkan");
+      console.log("➕ Adding new customer:", formData.name)
+      await window.addDoc(window.collection(window.db, "customers"), formData)
+      showToast("✅ Pelanggan baru berhasil ditambahkan")
     }
 
-    closeCustomerModal();
-    await loadCustomers();
-    updateDashboardStats();
+    closeCustomerModal()
+    await loadCustomers()
+    updateDashboardStats()
   } catch (error) {
-    console.error("❌ Error saving customer:", error);
+    console.error("❌ Error saving customer:", error)
     if (error.code === "permission-denied") {
-      showToast("❌ Permission denied. Periksa Firestore Rules!", "error");
-      showFirebaseRulesHelp();
+      showToast("❌ Permission denied. Periksa Firestore Rules!", "error")
+      showFirebaseRulesHelp()
     } else {
-      showToast("❌ Error menyimpan: " + error.message, "error");
+      showToast("❌ Error menyimpan: " + error.message, "error")
     }
   } finally {
-    submitBtn.textContent = originalText;
-    submitBtn.disabled = false;
-    isLoading = false;
+    submitBtn.textContent = originalText
+    submitBtn.disabled = false
+    isLoading = false
   }
 }
 
 // Global functions for button clicks
 window.editCustomer = (customerId) => {
-  const customer = customers.find((c) => c.id === customerId);
+  const customer = customers.find((c) => c.id === customerId)
   if (customer) {
-    openCustomerModal(customer);
+    openCustomerModal(customer)
   }
-};
+}
 
 window.deleteCustomer = async (customerId) => {
   if (!confirm("Apakah Anda yakin ingin menghapus pelanggan ini?")) {
-    return;
+    return
   }
 
   try {
-    await window.deleteDoc(window.doc(window.db, "customers", customerId));
-    showToast("✅ Pelanggan berhasil dihapus");
-    await loadCustomers();
-    updateDashboardStats();
+    await window.deleteDoc(window.doc(window.db, "customers", customerId))
+    showToast("✅ Pelanggan berhasil dihapus")
+    await loadCustomers()
+    updateDashboardStats()
   } catch (error) {
-    console.error("❌ Error deleting customer:", error);
+    console.error("❌ Error deleting customer:", error)
     if (error.code === "permission-denied") {
-      showToast("❌ Permission denied. Periksa Firestore Rules!", "error");
-      showFirebaseRulesHelp();
+      showToast("❌ Permission denied. Periksa Firestore Rules!", "error")
+      showFirebaseRulesHelp()
     } else {
-      showToast("❌ Error menghapus: " + error.message, "error");
+      showToast("❌ Error menghapus: " + error.message, "error")
     }
   }
-};
+}
 
 // Improved Discord Upload Function
 async function uploadToDiscordImproved(file, description = "") {
-  const formData = new FormData();
-  formData.append("file", file);
+  const formData = new FormData()
+  formData.append("file", file)
 
   // Create a more detailed embed
   const embed = {
@@ -1510,11 +1376,7 @@ async function uploadToDiscordImproved(file, description = "") {
     fields: [
       {
         name: "📁 File Info",
-        value: `**Nama:** ${file.name}\n**Ukuran:** ${(
-          file.size /
-          1024 /
-          1024
-        ).toFixed(2)} MB\n**Type:** ${file.type}`,
+        value: `**Nama:** ${file.name}\n**Ukuran:** ${(file.size / 1024 / 1024).toFixed(2)} MB\n**Type:** ${file.type}`,
         inline: true,
       },
       {
@@ -1523,84 +1385,77 @@ async function uploadToDiscordImproved(file, description = "") {
         inline: true,
       },
     ],
-  };
+  }
 
   const payload = {
     embeds: [embed],
-  };
+  }
 
-  formData.append("payload_json", JSON.stringify(payload));
+  formData.append("payload_json", JSON.stringify(payload))
 
   try {
-    console.log("📤 Uploading to Discord with improved method:", file.name);
+    console.log("📤 Uploading to Discord with improved method:", file.name)
     const response = await fetch(window.DISCORD_WEBHOOK_URL, {
       method: "POST",
       body: formData,
-    });
+    })
 
     if (response.ok) {
-      const result = await response.json();
-      console.log("✅ Discord upload successful:", result);
+      const result = await response.json()
+      console.log("✅ Discord upload successful:", result)
 
       // Try to get the actual attachment URL
       if (result.attachments && result.attachments.length > 0) {
-        return result.attachments[0].url;
+        return result.attachments[0].url
       }
 
       // Fallback: create a placeholder URL that references the Discord message
-      const timestamp = Date.now();
-      return `https://cdn.discordapp.com/attachments/1398168018412114020/${timestamp}/${encodeURIComponent(
-        file.name
-      )}`;
+      const timestamp = Date.now()
+      return `https://cdn.discordapp.com/attachments/1398168018412114020/${timestamp}/${encodeURIComponent(file.name)}`
     } else {
-      const errorText = await response.text();
-      console.error("❌ Discord upload failed:", response.status, errorText);
-      throw new Error(`Discord upload failed: ${response.status}`);
+      const errorText = await response.text()
+      console.error("❌ Discord upload failed:", response.status, errorText)
+      throw new Error(`Discord upload failed: ${response.status}`)
     }
   } catch (error) {
-    console.error("❌ Discord upload error:", error);
-    throw error;
+    console.error("❌ Discord upload error:", error)
+    throw error
   }
 }
 
 // Legacy Discord Upload Function (fallback)
 async function uploadToDiscord(file, description = "") {
-  return uploadToDiscordImproved(file, description);
+  return uploadToDiscordImproved(file, description)
 }
 
 // Dashboard Functions
 function updateDashboardStats() {
   // Update customer stats (real data) - dengan null check
-  const totalCustomersEl = document.getElementById("total-customers");
-  if (totalCustomersEl) totalCustomersEl.textContent = customers.length;
+  const totalCustomersEl = document.getElementById("total-customers")
+  if (totalCustomersEl) totalCustomersEl.textContent = customers.length
 
   // Calculate real stats from orders
-  const today = new Date().toDateString();
-  const todayOrders = orders.filter(
-    (order) => new Date(order.createdAt).toDateString() === today
-  );
-  const completedOrders = orders.filter((order) => order.status === "Selesai");
-  const todayRevenue = todayOrders.reduce(
-    (sum, order) => sum + (order.price || 0),
-    0
-  );
+  const today = new Date().toDateString()
+  const todayOrders = orders.filter((order) => new Date(order.createdAt).toDateString() === today)
+  const completedOrders = orders.filter((order) => order.status === "Selesai")
+  const todayRevenue = todayOrders.reduce((sum, order) => sum + (order.price || 0), 0)
 
-  const todayOrdersEl = document.getElementById("today-orders");
-  if (todayOrdersEl) todayOrdersEl.textContent = todayOrders.length;
+  const todayOrdersEl = document.getElementById("today-orders")
+  if (todayOrdersEl) todayOrdersEl.textContent = todayOrders.length
 
-  const completedOrdersEl = document.getElementById("completed-orders");
-  if (completedOrdersEl) completedOrdersEl.textContent = completedOrders.length;
+  const completedOrdersEl = document.getElementById("completed-orders")
+  if (completedOrdersEl) completedOrdersEl.textContent = completedOrders.length
 
-  const totalRevenueEl = document.getElementById("total-revenue");
-  if (totalRevenueEl) totalRevenueEl.textContent = formatCurrency(todayRevenue);
+  const totalRevenueEl = document.getElementById("total-revenue")
+  if (totalRevenueEl) totalRevenueEl.textContent = formatCurrency(todayRevenue)
 }
 
 function loadRecentOrders() {
-  const container = document.getElementById("recent-orders");
-  if (!container) return;
+  const container = document.getElementById("recent-orders")
+  if (!container) return
 
   // Get recent orders (last 5)
-  const recentOrders = orders.slice(0, 5);
+  const recentOrders = orders.slice(0, 5)
 
   if (recentOrders.length === 0) {
     container.innerHTML = `
@@ -1609,52 +1464,47 @@ function loadRecentOrders() {
         <p class="text-gray-400">Belum ada pesanan hari ini</p>
         <p class="text-gray-500 text-sm mt-1">Pesanan akan muncul di sini</p>
       </div>
-    `;
-    return;
+    `
+    return
   }
 
-  container.innerHTML = "";
+  container.innerHTML = ""
   recentOrders.forEach((order) => {
-    const orderItem = document.createElement("div");
-    orderItem.className =
-      "flex justify-between items-center p-3 bg-white/5 rounded-lg";
+    const orderItem = document.createElement("div")
+    orderItem.className = "flex justify-between items-center p-3 bg-white/5 rounded-lg"
     orderItem.innerHTML = `
       <div>
         <p class="text-white text-sm font-medium">${order.customerName}</p>
-        <p class="text-gray-400 text-xs">${order.waterType} - ${
-      order.quantity
-    } galon</p>
+        <p class="text-gray-400 text-xs">${order.waterType} - ${order.quantity} galon</p>
       </div>
       <div class="text-right">
         <p class="text-white text-sm">${formatCurrency(order.price)}</p>
-        <span class="text-xs px-2 py-1 rounded-full ${getOrderStatusClass(
-          order.status
-        )}">
+        <span class="text-xs px-2 py-1 rounded-full ${getOrderStatusClass(order.status)}">
           ${order.status}
         </span>
       </div>
-    `;
-    container.appendChild(orderItem);
-  });
+    `
+    container.appendChild(orderItem)
+  })
 }
 
 function loadPopularProducts() {
-  const container = document.getElementById("popular-products");
-  if (!container) return;
+  const container = document.getElementById("popular-products")
+  if (!container) return
 
   // Calculate product popularity
-  const productStats = {};
+  const productStats = {}
   orders.forEach((order) => {
     if (productStats[order.waterType]) {
-      productStats[order.waterType] += order.quantity;
+      productStats[order.waterType] += order.quantity
     } else {
-      productStats[order.waterType] = order.quantity;
+      productStats[order.waterType] = order.quantity
     }
-  });
+  })
 
   const sortedProducts = Object.entries(productStats)
     .sort(([, a], [, b]) => b - a)
-    .slice(0, 3);
+    .slice(0, 3)
 
   if (sortedProducts.length === 0) {
     container.innerHTML = `
@@ -1663,15 +1513,14 @@ function loadPopularProducts() {
         <p class="text-gray-400">Belum ada data produk</p>
         <p class="text-gray-500 text-sm mt-1">Data akan muncul setelah ada pesanan</p>
       </div>
-    `;
-    return;
+    `
+    return
   }
 
-  container.innerHTML = "";
+  container.innerHTML = ""
   sortedProducts.forEach(([product, quantity]) => {
-    const productItem = document.createElement("div");
-    productItem.className =
-      "flex justify-between items-center p-3 bg-white/5 rounded-lg";
+    const productItem = document.createElement("div")
+    productItem.className = "flex justify-between items-center p-3 bg-white/5 rounded-lg"
     productItem.innerHTML = `
       <div>
         <p class="text-white text-sm font-medium">${product}</p>
@@ -1681,161 +1530,146 @@ function loadPopularProducts() {
         <p class="text-white text-lg font-bold">${quantity}</p>
         <p class="text-gray-400 text-xs">galon</p>
       </div>
-    `;
-    container.appendChild(productItem);
-  });
+    `
+    container.appendChild(productItem)
+  })
 }
 
 function getOrderStatusClass(status) {
   switch (status) {
     case "Selesai":
-      return "bg-green-500/20 text-green-400";
+      return "bg-green-500/20 text-green-400"
     case "Dikirim":
-      return "bg-blue-500/20 text-blue-400";
+      return "bg-blue-500/20 text-blue-400"
     case "Diproses":
-      return "bg-yellow-500/20 text-yellow-400";
+      return "bg-yellow-500/20 text-yellow-400"
     case "Pending":
-      return "bg-red-500/20 text-red-400";
+      return "bg-red-500/20 text-red-400"
     default:
-      return "bg-gray-500/20 text-gray-400";
+      return "bg-gray-500/20 text-gray-400"
   }
 }
 
 // Utility Functions
 function formatDate(dateString) {
-  if (!dateString) return "-";
-  const date = new Date(dateString);
-  return date.toLocaleDateString("id-ID");
+  if (!dateString) return "-"
+  const date = new Date(dateString)
+  return date.toLocaleDateString("id-ID")
 }
 
 function formatCurrency(amount) {
   return new Intl.NumberFormat("id-ID", {
     style: "currency",
     currency: "IDR",
-  }).format(amount);
+  }).format(amount)
 }
 
 function showToast(message, type = "success") {
-  const toast = document.getElementById("toast");
-  const toastMessage = document.getElementById("toast-message");
+  const toast = document.getElementById("toast")
+  const toastMessage = document.getElementById("toast-message")
 
-  toastMessage.textContent = message;
+  toastMessage.textContent = message
 
   // Set toast color based on type
-  const toastContainer = toast.querySelector("div");
+  const toastContainer = toast.querySelector("div")
   if (type === "error") {
-    toastContainer.className =
-      "bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg";
+    toastContainer.className = "bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg"
   } else if (type === "warning") {
-    toastContainer.className =
-      "bg-yellow-500 text-white px-4 py-2 rounded-lg shadow-lg";
+    toastContainer.className = "bg-yellow-500 text-white px-4 py-2 rounded-lg shadow-lg"
   } else {
-    toastContainer.className =
-      "bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg";
+    toastContainer.className = "bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg"
   }
 
-  toast.classList.remove("hidden");
-  toast.classList.add("toast-enter");
+  toast.classList.remove("hidden")
+  toast.classList.add("toast-enter")
 
   setTimeout(() => {
-    toast.classList.add("toast-exit");
+    toast.classList.add("toast-exit")
     setTimeout(() => {
-      toast.classList.add("hidden");
-      toast.classList.remove("toast-enter", "toast-exit");
-    }, 300);
-  }, 5000);
+      toast.classList.add("hidden")
+      toast.classList.remove("toast-enter", "toast-exit")
+    }, 300)
+  }, 5000)
 }
 
 // Stock Management Functions
 function openStockModal() {
-  const modal = document.getElementById("stock-modal");
+  const modal = document.getElementById("stock-modal")
 
   // Fill current stock data
-  document.getElementById("stock-filled-input").value = stockData.filled;
-  document.getElementById("stock-empty-input").value = stockData.empty;
-  document.getElementById("stock-damaged-input").value = stockData.damaged;
+  document.getElementById("stock-filled-input").value = stockData.filled
+  document.getElementById("stock-empty-input").value = stockData.empty
+  document.getElementById("stock-damaged-input").value = stockData.damaged
 
-  modal.classList.remove("hidden");
+  modal.classList.remove("hidden")
 }
 
 function closeStockModal() {
-  const modal = document.getElementById("stock-modal");
-  modal.classList.add("hidden");
-  document.getElementById("stock-form").reset();
+  const modal = document.getElementById("stock-modal")
+  modal.classList.add("hidden")
+  document.getElementById("stock-form").reset()
 }
 
 async function handleStockSubmit(e) {
-  e.preventDefault();
+  e.preventDefault()
 
-  if (isLoading) return;
-  isLoading = true;
+  if (isLoading) return
+  isLoading = true
 
-  const submitBtn = e.target.querySelector('button[type="submit"]');
-  const originalText = submitBtn.textContent;
-  submitBtn.textContent = "Updating...";
-  submitBtn.disabled = true;
+  const submitBtn = e.target.querySelector('button[type="submit"]')
+  const originalText = submitBtn.textContent
+  submitBtn.textContent = "Updating..."
+  submitBtn.disabled = true
 
   try {
     const newStockData = {
-      filled: Number.parseInt(
-        document.getElementById("stock-filled-input").value
-      ),
-      empty: Number.parseInt(
-        document.getElementById("stock-empty-input").value
-      ),
-      damaged: Number.parseInt(
-        document.getElementById("stock-damaged-input").value
-      ),
+      filled: Number.parseInt(document.getElementById("stock-filled-input").value),
+      empty: Number.parseInt(document.getElementById("stock-empty-input").value),
+      damaged: Number.parseInt(document.getElementById("stock-damaged-input").value),
       notes: document.getElementById("stock-notes").value,
       updatedAt: new Date().toISOString(),
-    };
+    }
 
     // Save to Firestore
-    await window.addDoc(
-      window.collection(window.db, "stock_history"),
-      newStockData
-    );
+    await window.addDoc(window.collection(window.db, "stock_history"), newStockData)
 
     // Update local stock data
     stockData = {
       filled: newStockData.filled,
       empty: newStockData.empty,
       damaged: newStockData.damaged,
-    };
+    }
 
     // Update UI
-    updateStockDisplay();
-    loadStockHistory();
+    updateStockDisplay()
+    loadStockHistory()
 
-    showToast("✅ Stok berhasil diperbarui");
-    closeStockModal();
+    showToast("✅ Stok berhasil diperbarui")
+    closeStockModal()
   } catch (error) {
-    console.error("❌ Error updating stock:", error);
-    showToast("❌ Error updating stock: " + error.message, "error");
+    console.error("❌ Error updating stock:", error)
+    showToast("❌ Error updating stock: " + error.message, "error")
   } finally {
-    submitBtn.textContent = originalText;
-    submitBtn.disabled = false;
-    isLoading = false;
+    submitBtn.textContent = originalText
+    submitBtn.disabled = false
+    isLoading = false
   }
 }
 
 function updateStockDisplay() {
-  document.getElementById("stock-filled").textContent = stockData.filled;
-  document.getElementById("stock-empty").textContent = stockData.empty;
-  document.getElementById("stock-damaged").textContent = stockData.damaged;
+  document.getElementById("stock-filled").textContent = stockData.filled
+  document.getElementById("stock-empty").textContent = stockData.empty
+  document.getElementById("stock-damaged").textContent = stockData.damaged
 }
 
 async function loadStockHistory() {
   try {
     const querySnapshot = await window.getDocs(
-      window.query(
-        window.collection(window.db, "stock_history"),
-        window.orderBy("updatedAt", "desc")
-      )
-    );
+      window.query(window.collection(window.db, "stock_history"), window.orderBy("updatedAt", "desc")),
+    )
 
-    const container = document.getElementById("stock-history");
-    container.innerHTML = "";
+    const container = document.getElementById("stock-history")
+    container.innerHTML = ""
 
     if (querySnapshot.empty) {
       container.innerHTML = `
@@ -1843,153 +1677,145 @@ async function loadStockHistory() {
           <div class="text-gray-400 text-4xl mb-3">📦</div>
           <p class="text-gray-400">Belum ada riwayat stok</p>
         </div>
-      `;
-      return;
+      `
+      return
     }
 
     querySnapshot.forEach((doc) => {
-      const data = doc.data();
-      const historyItem = document.createElement("div");
-      historyItem.className =
-        "flex justify-between items-center p-3 bg-white/5 rounded-lg";
+      const data = doc.data()
+      const historyItem = document.createElement("div")
+      historyItem.className = "flex justify-between items-center p-3 bg-white/5 rounded-lg"
       historyItem.innerHTML = `
         <div>
           <p class="text-white text-sm">
-            Terisi: ${data.filled} | Kosong: ${data.empty} | Rusak: ${
-        data.damaged
-      }
+            Terisi: ${data.filled} | Kosong: ${data.empty} | Rusak: ${data.damaged}
           </p>
-          ${
-            data.notes
-              ? `<p class="text-gray-400 text-xs mt-1">${data.notes}</p>`
-              : ""
-          }
+          ${data.notes ? `<p class="text-gray-400 text-xs mt-1">${data.notes}</p>` : ""}
         </div>
         <div class="text-gray-400 text-xs">
           ${formatDate(data.updatedAt)}
         </div>
-      `;
-      container.appendChild(historyItem);
-    });
+      `
+      container.appendChild(historyItem)
+    })
   } catch (error) {
-    console.error("❌ Error loading stock history:", error);
+    console.error("❌ Error loading stock history:", error)
   }
 }
 
 // Order Management Functions
 function openOrderModal() {
-  const modal = document.getElementById("order-modal");
+  const modal = document.getElementById("order-modal")
 
   // Set default time to current time
-  const now = new Date();
-  const localDateTime = new Date(
-    now.getTime() - now.getTimezoneOffset() * 60000
-  )
-    .toISOString()
-    .slice(0, 16);
-  document.getElementById("order-time").value = localDateTime;
+  const now = new Date()
+  const localDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
+  document.getElementById("order-time").value = localDateTime
 
   // Set default quantity
-  document.getElementById("order-quantity").value = 1;
+  document.getElementById("order-quantity").value = 1
 
   // Populate courier dropdown only
-  populateCourierDropdown();
+  populateCourierDropdown()
 
   // Populate status dropdown
-  const statusSelect = document.getElementById("order-status");
+  const statusSelect = document.getElementById("order-status")
   statusSelect.innerHTML = `
     <option value="Pending">Pending</option>
     <option value="Diproses">Diproses</option>
     <option value="Dikirim">Dikirim</option>
     <option value="Selesai">Selesai</option>
-  `;
+  `
 
-  modal.classList.remove("hidden");
+  modal.classList.remove("hidden")
 }
 
 function closeOrderModal() {
-  const modal = document.getElementById("order-modal");
-  modal.classList.add("hidden");
-  document.getElementById("order-form").reset();
+  const modal = document.getElementById("order-modal")
+  modal.classList.add("hidden")
+  document.getElementById("order-form").reset()
 
   // Clear customer search
-  document.getElementById("order-customer-search").value = "";
-  document.getElementById("order-customer").value = "";
-  document.getElementById("customer-dropdown").classList.add("hidden");
-  selectedCustomerId = null;
+  document.getElementById("order-customer-search").value = ""
+  document.getElementById("order-customer").value = ""
+  document.getElementById("customer-dropdown").classList.add("hidden")
+  selectedCustomerId = null
 }
 
 function populateCustomerDropdown() {
-  const select = document.getElementById("order-customer");
-  select.innerHTML = '<option value="">Pilih Pelanggan</option>';
+  const select = document.getElementById("order-customer")
+  select.innerHTML = '<option value="">Pilih Pelanggan</option>'
 
   customers.forEach((customer) => {
-    const option = document.createElement("option");
-    option.value = customer.id;
-    option.textContent = customer.name;
-    select.appendChild(option);
-  });
+    const option = document.createElement("option")
+    option.value = customer.id
+    option.textContent = customer.name
+    select.appendChild(option)
+  })
 }
 
 function populateCourierDropdown() {
-  const select = document.getElementById("order-courier");
-  select.innerHTML = '<option value="">Pilih Kurir</option>';
+  const select = document.getElementById("order-courier")
+  select.innerHTML = '<option value="">Pilih Kurir</option>'
 
   couriers
     .filter((courier) => courier.isActive)
     .forEach((courier) => {
-      const option = document.createElement("option");
-      option.value = courier.id;
-      option.textContent = courier.name;
-      select.appendChild(option);
-    });
+      const option = document.createElement("option")
+      option.value = courier.id
+      option.textContent = courier.name
+      select.appendChild(option)
+    })
 
   // Also populate filter dropdown
-  const filterSelect = document.getElementById("order-courier-filter");
-  filterSelect.innerHTML = '<option value="">Semua Kurir</option>';
+  const filterSelect = document.getElementById("order-courier-filter")
+  filterSelect.innerHTML = '<option value="">Semua Kurir</option>'
 
   couriers.forEach((courier) => {
-    const option = document.createElement("option");
-    option.value = courier.id;
-    option.textContent = courier.name;
-    filterSelect.appendChild(option);
-  });
+    const option = document.createElement("option")
+    option.value = courier.id
+    option.textContent = courier.name
+    filterSelect.appendChild(option)
+  })
 }
 
 // Toggle Courier Selection
 window.toggleCourierSelection = () => {
-  const courierType = document.getElementById("order-courier-type").value;
-  const manualSelection = document.getElementById("manual-courier-selection");
+  const courierType = document.getElementById("order-courier-type").value
+  const manualSelection = document.getElementById("manual-courier-selection")
 
   if (courierType === "manual") {
-    manualSelection.classList.remove("hidden");
-    document.getElementById("order-courier").required = true;
+    manualSelection.classList.remove("hidden")
+    document.getElementById("order-courier").required = true
   } else {
-    manualSelection.classList.add("hidden");
-    document.getElementById("order-courier").required = false;
+    manualSelection.classList.add("hidden")
+    document.getElementById("order-courier").required = false
   }
-};
+}
 
 async function handleOrderSubmit(e) {
-  e.preventDefault();
+  e.preventDefault()
 
-  if (isLoading) return;
-  isLoading = true;
+  if (isLoading) return
+  isLoading = true
 
-  const submitBtn = e.target.querySelector('button[type="submit"]');
-  const originalText = submitBtn.textContent;
-  submitBtn.textContent = "Menyimpan...";
-  submitBtn.disabled = true;
+  const submitBtn = e.target.querySelector('button[type="submit"]')
+  const originalText = submitBtn.textContent
+  submitBtn.textContent = "Menyimpan..."
+  submitBtn.disabled = true
 
   try {
-    const customerId = document.getElementById("order-customer").value;
-    const courierType = document.getElementById("order-courier-type").value;
-    const orderTime = document.getElementById("order-time").value;
-    const customer = customers.find((c) => c.id === customerId);
+    const customerId = document.getElementById("order-customer").value
+    const courierType = document.getElementById("order-courier-type").value
+    const orderTime = document.getElementById("order-time").value
+    const customer = customers.find((c) => c.id === customerId)
 
     if (!customer) {
-      throw new Error("Pelanggan tidak ditemukan");
+      throw new Error("Pelanggan tidak ditemukan")
     }
+
+    const orderPrice = Number.parseInt(document.getElementById("order-price").value.replace(/[^\d]/g, ""))
+    const orderQuantity = Number.parseInt(document.getElementById("order-quantity").value)
 
     const orderData = {
       customerId: customerId,
@@ -1998,190 +1824,171 @@ async function handleOrderSubmit(e) {
       customerAddress: customer.address || "",
       customerMapLink: customer.mapLink || "",
       customerPhoto: customer.housePhoto || "",
-      quantity: Number.parseInt(
-        document.getElementById("order-quantity").value
-      ),
+      quantity: orderQuantity,
       waterType: document.getElementById("order-water-type").value,
       deliveryType: document.getElementById("order-delivery-type").value,
-      price: Number.parseInt(
-        document.getElementById("order-price").value.replace(/[^\d]/g, "")
-      ),
+      price: orderPrice,
       notes: document.getElementById("order-notes").value,
       orderTime: orderTime,
       status: document.getElementById("order-status").value,
-      paidAmount: 0, // Default to 0 - courier will input
-      returnedGallons: 0, // Default to 0 - courier will input
+      // Default: pesanan dianggap sudah dibayar penuh dan galon sudah dikembalikan
+      paidAmount: orderPrice,
+      returnedGallons: orderQuantity,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-    };
+    }
 
     if (courierType === "manual") {
       // Manual courier selection
-      const courierId = document.getElementById("order-courier").value;
-      const courier = couriers.find((c) => c.id === courierId);
+      const courierId = document.getElementById("order-courier").value
+      const courier = couriers.find((c) => c.id === courierId)
 
-      orderData.courierId = courierId;
-      orderData.courierName = courier.name;
-      orderData.assignedCourierId = courierId;
-      orderData.assignedCourierName = courier.name;
+      orderData.courierId = courierId
+      orderData.courierName = courier.name
+      orderData.assignedCourierId = courierId
+      orderData.assignedCourierName = courier.name
     } else if (courierType === "auto") {
       // Auto-assign - only set to Pending if no specific status was chosen
       if (orderData.status === "Pending") {
-        orderData.status = "Pending"; // This will show up in courier dashboard
+        orderData.status = "Pending" // This will show up in courier dashboard
       }
     }
 
-    console.log("📦 Creating order:", orderData);
+    console.log("📦 Creating order:", orderData)
 
     // Save to Firestore
-    await window.addDoc(window.collection(window.db, "orders"), orderData);
+    await window.addDoc(window.collection(window.db, "orders"), orderData)
 
     // Update customer's last order date
     await window.updateDoc(window.doc(window.db, "customers", customerId), {
       lastOrder: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-    });
+    })
 
-    showToast("✅ Pesanan berhasil ditambahkan");
-    closeOrderModal();
-    await loadOrders();
-    await loadCustomers(); // Reload customers to update order count
-    updateDashboardStats();
+    showToast("✅ Pesanan berhasil ditambahkan")
+    closeOrderModal()
+    await loadOrders()
+    await loadCustomers() // Reload customers to update order count
+    updateDashboardStats()
   } catch (error) {
-    console.error("❌ Error saving order:", error);
-    showToast("❌ Error menyimpan pesanan: " + error.message, "error");
+    console.error("❌ Error saving order:", error)
+    showToast("❌ Error menyimpan pesanan: " + error.message, "error")
   } finally {
-    submitBtn.textContent = originalText;
-    submitBtn.disabled = false;
-    isLoading = false;
+    submitBtn.textContent = originalText
+    submitBtn.disabled = false
+    isLoading = false
   }
 }
 
 // Order Edit Functions
 function openOrderEditModal(order) {
-  currentEditingOrder = order;
+  currentEditingOrder = order
 
-  const modal = document.getElementById("order-edit-modal");
-  const title = document.getElementById("order-edit-modal-title");
+  const modal = document.getElementById("order-edit-modal")
+  const title = document.getElementById("order-edit-modal-title")
 
-  title.textContent = `Edit Pesanan - ${order.customerName}`;
-  fillOrderEditForm(order);
+  title.textContent = `Edit Pesanan - ${order.customerName}`
+  fillOrderEditForm(order)
 
-  modal.classList.remove("hidden");
+  modal.classList.remove("hidden")
 }
 
 function closeOrderEditModal() {
-  const modal = document.getElementById("order-edit-modal");
-  modal.classList.add("hidden");
-  currentEditingOrder = null;
-  clearOrderEditForm();
+  const modal = document.getElementById("order-edit-modal")
+  modal.classList.add("hidden")
+  currentEditingOrder = null
+  clearOrderEditForm()
 }
 
 function fillOrderEditForm(order) {
-  document.getElementById("edit-order-status").value =
-    order.status || "Pending";
-  document.getElementById("edit-order-quantity").value = order.quantity || 0;
-  document.getElementById("edit-order-price").value = order.price || 0;
-  document.getElementById("edit-paid-amount").value = order.paidAmount || 0;
-  document.getElementById("edit-returned-gallons").value =
-    order.returnedGallons || 0;
-  document.getElementById("edit-order-notes").value = order.notes || "";
+  document.getElementById("edit-order-status").value = order.status || "Pending"
+  document.getElementById("edit-order-quantity").value = order.quantity || 0
+  document.getElementById("edit-order-price").value = order.price || 0
+  // Default: tampilkan sebagai sudah dibayar penuh dan galon sudah dikembalikan
+  document.getElementById("edit-paid-amount").value = order.paidAmount || order.price || 0
+  document.getElementById("edit-returned-gallons").value = order.returnedGallons || order.quantity || 0
+  document.getElementById("edit-order-notes").value = order.notes || ""
 }
 
 function clearOrderEditForm() {
-  document.getElementById("order-edit-form").reset();
+  document.getElementById("order-edit-form").reset()
 }
 
 async function handleOrderEditSubmit(e) {
-  e.preventDefault();
+  e.preventDefault()
 
-  if (!currentEditingOrder || isLoading) return;
-  isLoading = true;
+  if (!currentEditingOrder || isLoading) return
+  isLoading = true
 
-  const submitBtn = e.target.querySelector('button[type="submit"]');
-  const originalText = submitBtn.textContent;
-  submitBtn.textContent = "Menyimpan...";
-  submitBtn.disabled = true;
+  const submitBtn = e.target.querySelector('button[type="submit"]')
+  const originalText = submitBtn.textContent
+  submitBtn.textContent = "Menyimpan..."
+  submitBtn.disabled = true
 
   try {
     const updateData = {
       status: document.getElementById("edit-order-status").value,
-      quantity: Number.parseInt(
-        document.getElementById("edit-order-quantity").value
-      ),
+      quantity: Number.parseInt(document.getElementById("edit-order-quantity").value),
       price: Number.parseInt(document.getElementById("edit-order-price").value),
-      paidAmount: Number.parseInt(
-        document.getElementById("edit-paid-amount").value
-      ),
-      returnedGallons: Number.parseInt(
-        document.getElementById("edit-returned-gallons").value
-      ),
+      paidAmount: Number.parseInt(document.getElementById("edit-paid-amount").value),
+      returnedGallons: Number.parseInt(document.getElementById("edit-returned-gallons").value),
       notes: document.getElementById("edit-order-notes").value,
       updatedAt: new Date().toISOString(),
-    };
-
-    // If status changed to Selesai, add completion timestamp
-    if (
-      updateData.status === "Selesai" &&
-      currentEditingOrder.status !== "Selesai"
-    ) {
-      updateData.completedAt = new Date().toISOString();
     }
 
-    await window.updateDoc(
-      window.doc(window.db, "orders", currentEditingOrder.id),
-      updateData
-    );
+    // If status changed to Selesai, add completion timestamp
+    if (updateData.status === "Selesai" && currentEditingOrder.status !== "Selesai") {
+      updateData.completedAt = new Date().toISOString()
+    }
 
-    showToast("✅ Pesanan berhasil diperbarui");
-    closeOrderEditModal();
-    await loadOrders();
-    updateDashboardStats();
+    await window.updateDoc(window.doc(window.db, "orders", currentEditingOrder.id), updateData)
+
+    showToast("✅ Pesanan berhasil diperbarui")
+    closeOrderEditModal()
+    await loadOrders()
+    updateDashboardStats()
   } catch (error) {
-    console.error("❌ Error updating order:", error);
-    showToast("❌ Error memperbarui pesanan: " + error.message, "error");
+    console.error("❌ Error updating order:", error)
+    showToast("❌ Error memperbarui pesanan: " + error.message, "error")
   } finally {
-    submitBtn.textContent = originalText;
-    submitBtn.disabled = false;
-    isLoading = false;
+    submitBtn.textContent = originalText
+    submitBtn.disabled = false
+    isLoading = false
   }
 }
 
 // Global function for edit button
 window.editOrder = (orderId) => {
-  const order = orders.find((o) => o.id === orderId);
+  const order = orders.find((o) => o.id === orderId)
   if (order) {
-    openOrderEditModal(order);
+    openOrderEditModal(order)
   }
-};
+}
 
 async function loadOrders() {
   try {
     const querySnapshot = await window.getDocs(
-      window.query(
-        window.collection(window.db, "orders"),
-        window.orderBy("createdAt", "desc")
-      )
-    );
+      window.query(window.collection(window.db, "orders"), window.orderBy("createdAt", "desc")),
+    )
 
-    orders = [];
+    orders = []
     querySnapshot.forEach((doc) => {
-      orders.push({ id: doc.id, ...doc.data() });
-    });
+      orders.push({ id: doc.id, ...doc.data() })
+    })
 
-    renderOrders();
-    updateOrderStats();
-    updateDashboardStats();
-    loadRecentOrders();
-    loadPopularProducts();
+    renderOrders()
+    updateOrderStats()
+    updateDashboardStats()
+    loadRecentOrders()
+    loadPopularProducts()
   } catch (error) {
-    console.error("❌ Error loading orders:", error);
+    console.error("❌ Error loading orders:", error)
   }
 }
 
 function renderOrders() {
-  const grid = document.getElementById("orders-grid");
-  if (!grid) return;
+  const grid = document.getElementById("orders-grid")
+  if (!grid) return
 
   if (orders.length === 0) {
     grid.innerHTML = `
@@ -2190,40 +1997,126 @@ function renderOrders() {
         <p class="text-white text-lg">Belum ada pesanan</p>
         <p class="text-gray-400 text-sm mt-2">Klik "Tambah Pesanan" untuk memulai</p>
       </div>
-    `;
-    return;
+    `
+    return
   }
 
-  grid.innerHTML = "";
+  grid.innerHTML = ""
 
   orders.forEach((order) => {
-    const orderCard = createOrderCard(order);
-    grid.appendChild(orderCard);
-  });
+    const orderCard = createOrderCard(order)
+    grid.appendChild(orderCard)
+  })
 
-  lucide.createIcons();
+  lucide.createIcons()
+
+  // Populate filter dropdowns
+  populateOrderFilters()
+}
+
+function populateOrderFilters() {
+  // Populate status filter
+  const statusFilter = document.getElementById("order-status-filter")
+  if (statusFilter && statusFilter.children.length <= 1) {
+    // Only populate if not already done
+    statusFilter.innerHTML = `
+      <option value="">Semua Status</option>
+      <option value="Pending">Pending</option>
+      <option value="Diproses">Diproses</option>
+      <option value="Dikirim">Dikirim</option>
+      <option value="Selesai">Selesai</option>
+    `
+  }
+
+  // Populate courier filter
+  const courierFilter = document.getElementById("order-courier-filter")
+  if (courierFilter && courierFilter.children.length <= 1) {
+    // Only populate if not already done
+    courierFilter.innerHTML = '<option value="">Semua Kurir</option>'
+
+    // Get unique couriers from orders and couriers list
+    const orderCouriers = new Set()
+    orders.forEach((order) => {
+      if (order.assignedCourierId) orderCouriers.add(order.assignedCourierId)
+      if (order.courierId) orderCouriers.add(order.courierId)
+    })
+
+    couriers.forEach((courier) => {
+      const option = document.createElement("option")
+      option.value = courier.id
+      option.textContent = courier.name
+      courierFilter.appendChild(option)
+    })
+  }
 }
 
 function createOrderCard(order) {
-  const card = document.createElement("div");
-  card.className = "glass-card p-6 rounded-lg animate-fade-in";
+  const card = document.createElement("div")
+  card.className = "glass-card p-6 rounded-lg animate-fade-in"
 
-  const statusClass = getOrderStatusClass(order.status);
-  const deliveryTypeText =
-    order.deliveryType === "pickup" ? "Ambil Sendiri" : "Antar ke Rumah";
-  const deliveryTypeClass =
-    order.deliveryType === "pickup"
-      ? "bg-blue-500/20 text-blue-400"
-      : "bg-green-500/20 text-green-400";
+  const statusClass = getOrderStatusClass(order.status)
+
+  // Only show delivery type badge if order is not pending and has delivery type
+  let deliveryTypeBadge = ""
+  if (order.status !== "Pending" && order.deliveryType) {
+    const deliveryTypeText = order.deliveryType === "pickup" ? "Ambil Sendiri" : "Antar ke Rumah"
+    const deliveryTypeClass =
+      order.deliveryType === "pickup" ? "bg-blue-500/20 text-blue-400" : "bg-green-500/20 text-green-400"
+
+    deliveryTypeBadge = `
+      <span class="px-2 py-1 text-xs rounded-full ${deliveryTypeClass}">
+        ${deliveryTypeText}
+      </span>
+    `
+  }
 
   // Fix courier name display
-  const courierName =
-    order.assignedCourierName || order.courierName || "Belum di-assign";
+  const courierName = order.assignedCourierName || order.courierName || "Belum di-assign"
 
-  // Calculate unpaid amount and unreturned gallons
-  const unpaidAmount = (order.price || 0) - (order.paidAmount || 0);
-  const unreturnedGallons =
-    (order.quantity || 0) - (order.returnedGallons || 0);
+  // Payment and return status logic
+  const paidAmount = order.paidAmount || 0
+  const returnedGallons = order.returnedGallons || 0
+  const totalPrice = order.price || 0
+  const totalQuantity = order.quantity || 0
+
+  let paymentStatus = ""
+  let returnStatus = ""
+
+  // Payment status
+  if (paidAmount >= totalPrice) {
+    paymentStatus = `
+      <div class="flex justify-between">
+        <span class="text-gray-400">Status Bayar:</span>
+        <span class="text-green-400 font-medium">Sudah Dibayar</span>
+      </div>
+    `
+  } else {
+    const unpaidAmount = totalPrice - paidAmount
+    paymentStatus = `
+      <div class="flex justify-between">
+        <span class="text-gray-400">Belum Dibayar:</span>
+        <span class="text-yellow-400 font-medium">${formatCurrency(unpaidAmount)}</span>
+      </div>
+    `
+  }
+
+  // Return status
+  if (returnedGallons >= totalQuantity) {
+    returnStatus = `
+      <div class="flex justify-between">
+        <span class="text-gray-400">Status Galon:</span>
+        <span class="text-green-400 font-medium">Galon Kembali</span>
+      </div>
+    `
+  } else {
+    const unreturnedGallons = totalQuantity - returnedGallons
+    returnStatus = `
+      <div class="flex justify-between">
+        <span class="text-gray-400">Belum Kembali:</span>
+        <span class="text-orange-400 font-medium">${unreturnedGallons} galon</span>
+      </div>
+    `
+  }
 
   card.innerHTML = `
   <div class="flex justify-between items-start mb-4">
@@ -2234,9 +2127,7 @@ function createOrderCard(order) {
         <span class="px-2 py-1 text-xs rounded-full ${statusClass}">
           ${order.status}
         </span>
-        <span class="px-2 py-1 text-xs rounded-full ${deliveryTypeClass}">
-          ${deliveryTypeText}
-        </span>
+        ${deliveryTypeBadge}
       </div>
     </div>
     <div class="flex items-center gap-2">
@@ -2247,10 +2138,7 @@ function createOrderCard(order) {
       ${
         order.status === "Pending"
           ? `
-        <button onclick="openAssignModal(${JSON.stringify(order).replace(
-          /"/g,
-          "&quot;"
-        )})" 
+        <button onclick="openAssignModal(${JSON.stringify(order).replace(/"/g, "&quot;")})" 
           class="bg-orange-500 hover:bg-orange-600 text-white px-2 py-1 rounded text-xs">
           Assign Manual
         </button>
@@ -2277,33 +2165,11 @@ function createOrderCard(order) {
       <span class="text-gray-400">Harga:</span>
       <span class="text-white">${formatCurrency(order.price)}</span>
     </div>
-    ${
-      unpaidAmount > 0
-        ? `
-    <div class="flex justify-between">
-      <span class="text-gray-400">Belum Dibayar:</span>
-      <span class="text-yellow-400 font-medium">${formatCurrency(
-        unpaidAmount
-      )}</span>
-    </div>
-    `
-        : ""
-    }
-    ${
-      unreturnedGallons > 0
-        ? `
-    <div class="flex justify-between">
-      <span class="text-gray-400">Belum Kembali:</span>
-      <span class="text-orange-400 font-medium">${unreturnedGallons} galon</span>
-    </div>
-    `
-        : ""
-    }
+    ${paymentStatus}
+    ${returnStatus}
     <div class="flex justify-between">
       <span class="text-gray-400">Waktu Pesanan:</span>
-      <span class="text-white">${formatDateTime(
-        order.orderTime || order.createdAt
-      )}</span>
+      <span class="text-white">${formatDateTime(order.orderTime || order.createdAt)}</span>
     </div>
     <div class="flex justify-between">
       <span class="text-gray-400">Dibuat:</span>
@@ -2320,110 +2186,191 @@ function createOrderCard(order) {
         : ""
     }
   </div>
-`;
+`
 
-  return card;
+  return card
 }
 
 function updateOrderStats() {
-  const total = orders.length;
-  const pending = orders.filter((o) => o.status === "Pending").length;
-  const processing = orders.filter((o) => o.status === "Diproses").length;
-  const shipped = orders.filter((o) => o.status === "Dikirim").length;
-  const completed = orders.filter((o) => o.status === "Selesai").length;
+  const total = orders.length
+  const pending = orders.filter((o) => o.status === "Pending").length
+  const processing = orders.filter((o) => o.status === "Diproses").length
+  const shipped = orders.filter((o) => o.status === "Dikirim").length
+  const completed = orders.filter((o) => o.status === "Selesai").length
 
-  document.getElementById("orders-total").textContent = total;
-  document.getElementById("orders-pending").textContent = pending;
-  document.getElementById("orders-processing").textContent = processing;
-  document.getElementById("orders-shipped").textContent = shipped;
-  document.getElementById("orders-completed").textContent = completed;
+  document.getElementById("orders-total").textContent = total
+  document.getElementById("orders-pending").textContent = pending
+  document.getElementById("orders-processing").textContent = processing
+  document.getElementById("orders-shipped").textContent = shipped
+  document.getElementById("orders-completed").textContent = completed
 }
 
 function handleOrderSearch(e) {
-  // Implementation for order search
-  const searchTerm = e.target.value.toLowerCase();
-  // Filter and render orders based on search
+  const searchTerm = e.target.value.toLowerCase()
+  const statusFilter = document.getElementById("order-status-filter").value
+  const courierFilter = document.getElementById("order-courier-filter").value
+
+  filterAndRenderOrders(searchTerm, statusFilter, courierFilter)
 }
 
 function handleOrderFilter() {
-  // Implementation for order filtering
-  const statusFilter = document.getElementById("order-status-filter").value;
-  const courierFilter = document.getElementById("order-courier-filter").value;
-  // Filter and render orders based on filters
+  const searchTerm = document.getElementById("order-search").value.toLowerCase()
+  const statusFilter = document.getElementById("order-status-filter").value
+  const courierFilter = document.getElementById("order-courier-filter").value
+
+  filterAndRenderOrders(searchTerm, statusFilter, courierFilter)
+}
+
+function filterAndRenderOrders(searchTerm = "", statusFilter = "", courierFilter = "") {
+  let filteredOrders = [...orders]
+
+  // Filter by search term (customer name, water type, or notes)
+  if (searchTerm) {
+    filteredOrders = filteredOrders.filter(
+      (order) =>
+        order.customerName.toLowerCase().includes(searchTerm) ||
+        order.waterType.toLowerCase().includes(searchTerm) ||
+        (order.notes && order.notes.toLowerCase().includes(searchTerm)),
+    )
+  }
+
+  // Filter by status
+  if (statusFilter) {
+    filteredOrders = filteredOrders.filter((order) => order.status === statusFilter)
+  }
+
+  // Filter by courier
+  if (courierFilter) {
+    filteredOrders = filteredOrders.filter(
+      (order) => order.assignedCourierId === courierFilter || order.courierId === courierFilter,
+    )
+  }
+
+  // Render filtered orders
+  const grid = document.getElementById("orders-grid")
+  if (!grid) return
+
+  if (filteredOrders.length === 0) {
+    grid.innerHTML = `
+      <div class="col-span-full text-center py-12">
+        <div class="text-gray-400 text-6xl mb-4">🔍</div>
+        <p class="text-white text-lg">Tidak ada pesanan ditemukan</p>
+        <p class="text-gray-400 text-sm mt-2">Coba ubah filter atau kata kunci pencarian</p>
+        <button onclick="clearOrderFilters()" class="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">
+          Reset Filter
+        </button>
+      </div>
+    `
+    return
+  }
+
+  grid.innerHTML = ""
+  filteredOrders.forEach((order) => {
+    const orderCard = createOrderCard(order)
+    grid.appendChild(orderCard)
+  })
+
+  lucide.createIcons()
+
+  // Update stats for filtered results
+  updateFilteredOrderStats(filteredOrders)
+}
+
+function updateFilteredOrderStats(filteredOrders) {
+  const total = filteredOrders.length
+  const pending = filteredOrders.filter((o) => o.status === "Pending").length
+  const processing = filteredOrders.filter((o) => o.status === "Diproses").length
+  const shipped = filteredOrders.filter((o) => o.status === "Dikirim").length
+  const completed = filteredOrders.filter((o) => o.status === "Selesai").length
+
+  // Update stats display if elements exist
+  const totalEl = document.getElementById("orders-total")
+  const pendingEl = document.getElementById("orders-pending")
+  const processingEl = document.getElementById("orders-processing")
+  const shippedEl = document.getElementById("orders-shipped")
+  const completedEl = document.getElementById("orders-completed")
+
+  if (totalEl) totalEl.textContent = total
+  if (pendingEl) pendingEl.textContent = pending
+  if (processingEl) processingEl.textContent = processing
+  if (shippedEl) shippedEl.textContent = shipped
+  if (completedEl) completedEl.textContent = completed
+}
+
+// Add clear filters function
+window.clearOrderFilters = () => {
+  document.getElementById("order-search").value = ""
+  document.getElementById("order-status-filter").value = ""
+  document.getElementById("order-courier-filter").value = ""
+  renderOrders() // Show all orders again
 }
 
 // Customer Search Functions
-let selectedCustomerId = null;
+let selectedCustomerId = null
 
 window.searchCustomers = (searchTerm) => {
-  const dropdown = document.getElementById("customer-dropdown");
-  const hiddenInput = document.getElementById("order-customer");
+  const dropdown = document.getElementById("customer-dropdown")
+  const hiddenInput = document.getElementById("order-customer")
 
   if (searchTerm.length < 2) {
-    dropdown.classList.add("hidden");
-    hiddenInput.value = "";
-    selectedCustomerId = null;
-    return;
+    dropdown.classList.add("hidden")
+    hiddenInput.value = ""
+    selectedCustomerId = null
+    return
   }
 
   const filteredCustomers = customers.filter((customer) =>
-    customer.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+    customer.name.toLowerCase().includes(searchTerm.toLowerCase()),
+  )
 
   if (filteredCustomers.length === 0) {
-    dropdown.innerHTML =
-      '<div class="p-3 text-gray-400 text-sm">Tidak ada pelanggan ditemukan</div>';
-    dropdown.classList.remove("hidden");
-    return;
+    dropdown.innerHTML = '<div class="p-3 text-gray-400 text-sm">Tidak ada pelanggan ditemukan</div>'
+    dropdown.classList.remove("hidden")
+    return
   }
 
-  dropdown.innerHTML = "";
+  dropdown.innerHTML = ""
   filteredCustomers.forEach((customer) => {
-    const option = document.createElement("div");
+    const option = document.createElement("div")
     option.className =
-      "p-3 hover:bg-white/10 cursor-pointer text-white text-sm border-b border-white/10 last:border-b-0";
+      "p-3 hover:bg-white/10 cursor-pointer text-white text-sm border-b border-white/10 last:border-b-0"
     option.innerHTML = `
       <div class="font-medium">${customer.name}</div>
       <div class="text-xs text-gray-400">${customer.address}</div>
-    `;
-    option.onclick = () => selectCustomer(customer);
-    dropdown.appendChild(option);
-  });
+    `
+    option.onclick = () => selectCustomer(customer)
+    dropdown.appendChild(option)
+  })
 
-  dropdown.classList.remove("hidden");
-};
+  dropdown.classList.remove("hidden")
+}
 
 function selectCustomer(customer) {
-  document.getElementById("order-customer-search").value = customer.name;
-  document.getElementById("order-customer").value = customer.id;
-  document.getElementById("customer-dropdown").classList.add("hidden");
-  selectedCustomerId = customer.id;
+  document.getElementById("order-customer-search").value = customer.name
+  document.getElementById("order-customer").value = customer.id
+  document.getElementById("customer-dropdown").classList.add("hidden")
+  selectedCustomerId = customer.id
 }
 
 // Close dropdown when clicking outside
 document.addEventListener("click", (e) => {
-  const searchInput = document.getElementById("order-customer-search");
-  const dropdown = document.getElementById("customer-dropdown");
+  const searchInput = document.getElementById("order-customer-search")
+  const dropdown = document.getElementById("customer-dropdown")
 
-  if (
-    searchInput &&
-    dropdown &&
-    !searchInput.contains(e.target) &&
-    !dropdown.contains(e.target)
-  ) {
-    dropdown.classList.add("hidden");
+  if (searchInput && dropdown && !searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+    dropdown.classList.add("hidden")
   }
-});
+})
 
 // Manual Assignment Functions
-let currentAssignOrder = null;
+let currentAssignOrder = null
 
 function openAssignModal(order) {
-  currentAssignOrder = order;
-  const modal = document.getElementById("assign-modal");
+  currentAssignOrder = order
+  const modal = document.getElementById("assign-modal")
 
   // Populate order info
-  const orderInfo = document.getElementById("assign-order-info");
+  const orderInfo = document.getElementById("assign-order-info")
   orderInfo.innerHTML = `
     <div class="text-sm space-y-1">
       <div class="flex justify-between">
@@ -2443,346 +2390,265 @@ function openAssignModal(order) {
         <span class="text-white">${formatCurrency(order.price)}</span>
       </div>
     </div>
-  `;
+  `
 
   // Populate courier dropdown
-  const select = document.getElementById("assign-courier");
-  select.innerHTML = '<option value="">Pilih Kurir</option>';
+  const select = document.getElementById("assign-courier")
+  select.innerHTML = '<option value="">Pilih Kurir</option>'
 
   couriers
     .filter((courier) => courier.isActive)
     .forEach((courier) => {
-      const option = document.createElement("option");
-      option.value = courier.id;
-      option.textContent = courier.name;
-      select.appendChild(option);
-    });
+      const option = document.createElement("option")
+      option.value = courier.id
+      option.textContent = courier.name
+      select.appendChild(option)
+    })
 
-  modal.classList.remove("hidden");
+  modal.classList.remove("hidden")
 }
 
 function closeAssignModal() {
-  const modal = document.getElementById("assign-modal");
-  modal.classList.add("hidden");
-  currentAssignOrder = null;
-  document.getElementById("assign-form").reset();
+  const modal = document.getElementById("assign-modal")
+  modal.classList.add("hidden")
+  currentAssignOrder = null
+  document.getElementById("assign-form").reset()
 }
 
 async function handleAssignSubmit(e) {
-  e.preventDefault();
+  e.preventDefault()
 
-  if (!currentAssignOrder) return;
+  if (!currentAssignOrder) return
 
-  const courierId = document.getElementById("assign-courier").value;
-  const courier = couriers.find((c) => c.id === courierId);
+  const courierId = document.getElementById("assign-courier").value
+  const courier = couriers.find((c) => c.id === courierId)
 
   try {
     // Get customer data for the order
-    const customer = customers.find(
-      (c) => c.id === currentAssignOrder.customerId
-    );
+    const customer = customers.find((c) => c.id === currentAssignOrder.customerId)
 
     // Update order with courier assignment
-    await window.updateDoc(
-      window.doc(window.db, "orders", currentAssignOrder.id),
-      {
-        assignedCourierId: courierId,
-        assignedCourierName: courier.name,
-        courierName: courier.name,
-        status: "Diproses",
-        customerPhone: customer?.phone || "",
-        customerAddress: customer?.address || "",
-        customerMapLink: customer?.mapLink || "",
-        customerPhoto: customer?.housePhoto || "",
-        assignedAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }
-    );
+    await window.updateDoc(window.doc(window.db, "orders", currentAssignOrder.id), {
+      assignedCourierId: courierId,
+      assignedCourierName: courier.name,
+      courierName: courier.name,
+      status: "Diproses",
+      customerPhone: customer?.phone || "",
+      customerAddress: customer?.address || "",
+      customerMapLink: customer?.mapLink || "",
+      customerPhoto: customer?.housePhoto || "",
+      assignedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    })
 
-    showToast(`✅ Pesanan berhasil di-assign ke ${courier.name}`);
-    closeAssignModal();
-    await loadOrders();
+    showToast(`✅ Pesanan berhasil di-assign ke ${courier.name}`)
+    closeAssignModal()
+    await loadOrders()
   } catch (error) {
-    console.error("❌ Error assigning order:", error);
-    showToast("❌ Error assign pesanan: " + error.message, "error");
+    console.error("❌ Error assigning order:", error)
+    showToast("❌ Error assign pesanan: " + error.message, "error")
   }
 }
 
 // Delete Order Function
 window.deleteOrder = async (orderId) => {
   if (!confirm("Apakah Anda yakin ingin menghapus pesanan ini?")) {
-    return;
+    return
   }
 
   try {
-    await window.deleteDoc(window.doc(window.db, "orders", orderId));
-    showToast("✅ Pesanan berhasil dihapus");
-    await loadOrders();
-    updateDashboardStats();
+    await window.deleteDoc(window.doc(window.db, "orders", orderId))
+    showToast("✅ Pesanan berhasil dihapus")
+    await loadOrders()
+    updateDashboardStats()
   } catch (error) {
-    console.error("❌ Error deleting order:", error);
+    console.error("❌ Error deleting order:", error)
     if (error.code === "permission-denied") {
-      showToast("❌ Permission denied. Periksa Firestore Rules!", "error");
-      showFirebaseRulesHelp();
+      showToast("❌ Permission denied. Periksa Firestore Rules!", "error")
+      showFirebaseRulesHelp()
     } else {
-      showToast("❌ Error menghapus pesanan: " + error.message, "error");
+      showToast("❌ Error menghapus pesanan: " + error.message, "error")
     }
   }
-};
+}
 
 // Global functions
-window.openAssignModal = openAssignModal;
-window.closeAssignModal = closeAssignModal;
+window.openAssignModal = openAssignModal
+window.closeAssignModal = closeAssignModal
 
 // Analytics Functions
 async function loadAnalytics() {
   try {
-    console.log("📊 Loading analytics data...");
+    console.log("📊 Loading analytics data...")
+
+    // Wait for Chart.js to be available
+    if (typeof Chart === "undefined") {
+      console.error("Chart.js not loaded")
+      return
+    }
 
     // Calculate monthly stats
-    const currentMonth = new Date().getMonth();
-    const currentYear = new Date().getFullYear();
+    const currentMonth = new Date().getMonth()
+    const currentYear = new Date().getFullYear()
     const monthlyOrders = orders.filter((order) => {
-      const orderDate = new Date(order.createdAt);
-      return (
-        orderDate.getMonth() === currentMonth &&
-        orderDate.getFullYear() === currentYear
-      );
-    });
+      const orderDate = new Date(order.createdAt)
+      return orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear
+    })
 
-    const monthlyRevenue = monthlyOrders.reduce(
-      (sum, order) => sum + (order.price || 0),
-      0
-    );
+    const monthlyRevenue = monthlyOrders.reduce((sum, order) => sum + (order.price || 0), 0)
     const newCustomersThisMonth = customers.filter((customer) => {
-      const joinDate = new Date(customer.createdAt);
-      return (
-        joinDate.getMonth() === currentMonth &&
-        joinDate.getFullYear() === currentYear
-      );
-    }).length;
+      const joinDate = new Date(customer.createdAt)
+      return joinDate.getMonth() === currentMonth && joinDate.getFullYear() === currentYear
+    }).length
 
-    const avgOrderValue =
-      monthlyOrders.length > 0 ? monthlyRevenue / monthlyOrders.length : 0;
+    const avgOrderValue = monthlyOrders.length > 0 ? monthlyRevenue / monthlyOrders.length : 0
 
     // Calculate total gallons sold
-    const totalGallonsSold = orders.reduce(
-      (sum, order) => sum + (order.quantity || 0),
-      0
-    );
+    const totalGallonsSold = orders.reduce((sum, order) => sum + (order.quantity || 0), 0)
 
     // Update analytics display
-    document.getElementById("analytics-monthly-revenue").textContent =
-      formatCurrency(monthlyRevenue);
-    document.getElementById("analytics-monthly-orders").textContent =
-      monthlyOrders.length;
-    document.getElementById("analytics-new-customers").textContent =
-      newCustomersThisMonth;
-    document.getElementById("analytics-avg-order").textContent =
-      formatCurrency(avgOrderValue);
+    document.getElementById("analytics-monthly-revenue").textContent = formatCurrency(monthlyRevenue)
+    document.getElementById("analytics-monthly-orders").textContent = monthlyOrders.length
+    document.getElementById("analytics-new-customers").textContent = newCustomersThisMonth
 
-    // Load charts
-    loadRevenueChart(orders);
-    loadOrdersChart(orders);
-    loadDeliveryHistory();
+    // Add average order value display
+    const avgOrderEl = document.getElementById("analytics-avg-order")
+    if (avgOrderEl) {
+      avgOrderEl.textContent = formatCurrency(avgOrderValue)
+    }
+
+    // Add total gallons sold to analytics if element exists
+    const totalGallonsEl = document.getElementById("analytics-total-gallons")
+    if (totalGallonsEl) {
+      totalGallonsEl.textContent = `${totalGallonsSold} galon`
+    }
+
+    // Load charts with delay to ensure DOM is ready
+    setTimeout(() => {
+      loadRevenueChart(orders)
+      loadOrdersChart(orders)
+    }, 100)
+
+    loadDeliveryHistory()
   } catch (error) {
-    console.error("❌ Error loading analytics:", error);
+    console.error("❌ Error loading analytics:", error)
   }
 }
 
 function loadRevenueChart(orders) {
-  const ctx = document.getElementById("revenue-chart")?.getContext("2d");
-  if (!ctx) return;
+  const canvas = document.getElementById("revenue-chart")
+  if (!canvas) {
+    console.error("Revenue chart canvas not found")
+    return
+  }
+
+  const ctx = canvas.getContext("2d")
+  if (!ctx) {
+    console.error("Cannot get 2D context for revenue chart")
+    return
+  }
 
   // Get last 7 days data
-  const last7Days = [];
-  const revenueData = [];
+  const last7Days = []
+  const revenueData = []
 
   for (let i = 6; i >= 0; i--) {
-    const date = new Date();
-    date.setDate(date.getDate() - i);
-    const dayString = date.toISOString().split("T")[0];
-    last7Days.push(
-      date.toLocaleDateString("id-ID", { day: "2-digit", month: "2-digit" })
-    );
+    const date = new Date()
+    date.setDate(date.getDate() - i)
+    const dayString = date.toISOString().split("T")[0]
+    last7Days.push(date.toLocaleDateString("id-ID", { day: "2-digit", month: "2-digit" }))
 
     const dayRevenue = orders
-      .filter(
-        (order) =>
-          order.createdAt?.startsWith(dayString) && order.status === "Selesai"
-      )
-      .reduce((sum, order) => sum + (order.price || 0), 0);
+      .filter((order) => order.createdAt?.startsWith(dayString) && order.status === "Selesai")
+      .reduce((sum, order) => sum + (order.price || 0), 0)
 
-    revenueData.push(dayRevenue);
+    revenueData.push(dayRevenue)
   }
 
   // Destroy existing chart if exists
   if (window.revenueChart) {
-    window.revenueChart.destroy();
+    window.revenueChart.destroy()
   }
 
-  window.revenueChart = new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: last7Days,
-      datasets: [
-        {
-          label: "Revenue (Rp)",
-          data: revenueData,
-          borderColor: "rgb(59, 130, 246)",
-          backgroundColor: "rgba(59, 130, 246, 0.1)",
-          tension: 0.4,
-          fill: true,
+  try {
+    window.revenueChart = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: last7Days,
+        datasets: [
+          {
+            label: "Revenue (Rp)",
+            data: revenueData,
+            borderColor: "rgb(59, 130, 246)",
+            backgroundColor: "rgba(59, 130, 246, 0.1)",
+            tension: 0.4,
+            fill: true,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            labels: {
+              color: "white",
+            },
+          },
         },
-      ],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      height: 200, // Fixed height
-      plugins: {
-        legend: {
-          labels: {
-            color: "white",
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              color: "white",
+              stepSize: 1,
+            },
+            grid: {
+              color: "rgba(255, 255, 255, 0.1)",
+            },
+          },
+          x: {
+            ticks: {
+              color: "white",
+            },
+            grid: {
+              color: "rgba(255, 255, 255, 0.1)",
+            },
           },
         },
       },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: {
-            color: "white",
-            callback: (value) =>
-              new Intl.NumberFormat("id-ID", {
-                style: "currency",
-                currency: "IDR",
-                minimumFractionDigits: 0,
-              }).format(value),
-          },
-          grid: {
-            color: "rgba(255, 255, 255, 0.1)",
-          },
-        },
-        x: {
-          ticks: {
-            color: "white",
-          },
-          grid: {
-            color: "rgba(255, 255, 255, 0.1)",
-          },
-        },
-      },
-    },
-  });
-}
-
-function loadOrdersChart(orders) {
-  const ctx = document.getElementById("orders-chart")?.getContext("2d");
-  if (!ctx) return;
-
-  // Get last 7 days data
-  const last7Days = [];
-  const ordersData = [];
-
-  for (let i = 6; i >= 0; i--) {
-    const date = new Date();
-    date.setDate(date.getDate() - i);
-    const dayString = date.toISOString().split("T")[0];
-    last7Days.push(
-      date.toLocaleDateString("id-ID", { day: "2-digit", month: "2-digit" })
-    );
-
-    const dayOrders = orders.filter((order) =>
-      order.createdAt?.startsWith(dayString)
-    ).length;
-    ordersData.push(dayOrders);
+    })
+    console.log("✅ Orders chart created successfully")
+  } catch (error) {
+    console.error("❌ Error creating orders chart:", error)
   }
-
-  // Destroy existing chart if exists
-  if (window.ordersChart) {
-    window.ordersChart.destroy();
-  }
-
-  window.ordersChart = new Chart(ctx, {
-    type: "bar",
-    data: {
-      labels: last7Days,
-      datasets: [
-        {
-          label: "Jumlah Pesanan",
-          data: ordersData,
-          backgroundColor: "rgba(34, 197, 94, 0.8)",
-          borderColor: "rgb(34, 197, 94)",
-          borderWidth: 1,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      height: 200, // Fixed height
-      plugins: {
-        legend: {
-          labels: {
-            color: "white",
-          },
-        },
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: {
-            color: "white",
-            stepSize: 1,
-          },
-          grid: {
-            color: "rgba(255, 255, 255, 0.1)",
-          },
-        },
-        x: {
-          ticks: {
-            color: "white",
-          },
-          grid: {
-            color: "rgba(255, 255, 255, 0.1)",
-          },
-        },
-      },
-    },
-  });
 }
 
 async function loadDeliveryHistory() {
   try {
-    const deliveryHistory = orders.filter(
-      (order) => order.status === "Selesai"
-    );
-    renderDeliveryHistory(deliveryHistory);
+    const deliveryHistory = orders.filter((order) => order.status === "Selesai")
+    renderDeliveryHistory(deliveryHistory)
 
     // Populate courier filter
-    const courierFilter = document.getElementById("history-courier");
+    const courierFilter = document.getElementById("history-courier")
     if (courierFilter) {
-      courierFilter.innerHTML = '<option value="">Semua Kurir</option>';
-      const uniqueCouriers = [
-        ...new Set(
-          deliveryHistory.map((h) => h.assignedCourierName).filter(Boolean)
-        ),
-      ];
+      courierFilter.innerHTML = '<option value="">Semua Kurir</option>'
+      const uniqueCouriers = [...new Set(deliveryHistory.map((h) => h.assignedCourierName).filter(Boolean))]
       uniqueCouriers.forEach((courierName) => {
-        const option = document.createElement("option");
-        option.value = courierName;
-        option.textContent = courierName;
-        courierFilter.appendChild(option);
-      });
+        const option = document.createElement("option")
+        option.value = courierName
+        option.textContent = courierName
+        courierFilter.appendChild(option)
+      })
     }
   } catch (error) {
-    console.error("❌ Error loading delivery history:", error);
+    console.error("❌ Error loading delivery history:", error)
   }
 }
 
 function renderDeliveryHistory(history) {
-  const container = document.getElementById("delivery-history");
-  if (!container) return;
+  const container = document.getElementById("delivery-history")
+  if (!container) return
 
   if (history.length === 0) {
     container.innerHTML = `
@@ -2790,23 +2656,19 @@ function renderDeliveryHistory(history) {
         <div class="text-gray-400 text-4xl mb-3">📋</div>
         <p class="text-gray-400">Belum ada history pengantaran</p>
       </div>
-    `;
-    return;
+    `
+    return
   }
 
-  container.innerHTML = "";
+  container.innerHTML = ""
 
   history.forEach((delivery) => {
-    const historyItem = document.createElement("div");
-    historyItem.className =
-      "flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10";
+    const historyItem = document.createElement("div")
+    historyItem.className = "flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10"
 
-    const deliveryTypeText =
-      delivery.deliveryType === "pickup" ? "Ambil Sendiri" : "Antar ke Rumah";
+    const deliveryTypeText = delivery.deliveryType === "pickup" ? "Ambil Sendiri" : "Antar ke Rumah"
     const deliveryTypeClass =
-      delivery.deliveryType === "pickup"
-        ? "bg-blue-500/20 text-blue-400"
-        : "bg-green-500/20 text-green-400";
+      delivery.deliveryType === "pickup" ? "bg-blue-500/20 text-blue-400" : "bg-green-500/20 text-green-400"
 
     historyItem.innerHTML = `
       <div class="flex-1">
@@ -2831,93 +2693,162 @@ function renderDeliveryHistory(history) {
           </div>
           <div>
             <span class="text-gray-400">Total:</span>
-            <p class="text-white font-medium">${formatCurrency(
-              delivery.price
-            )}</p>
+            <p class="text-white font-medium">${formatCurrency(delivery.price)}</p>
           </div>
         </div>
       </div>
       <div class="text-right">
         <p class="text-gray-400 text-xs">Selesai</p>
-        <p class="text-white text-sm">${formatDate(
-          delivery.completedAt || delivery.updatedAt
-        )}</p>
+        <p class="text-white text-sm">${formatDate(delivery.completedAt || delivery.updatedAt)}</p>
       </div>
-    `;
+    `
 
-    container.appendChild(historyItem);
-  });
+    container.appendChild(historyItem)
+  })
 }
 
 window.filterDeliveryHistory = async () => {
-  const period = document.getElementById("history-period")?.value;
-  const courierName = document.getElementById("history-courier")?.value;
+  const period = document.getElementById("history-period")?.value
+  const courierName = document.getElementById("history-courier")?.value
 
-  let filteredHistory = orders.filter((order) => order.status === "Selesai");
+  let filteredHistory = orders.filter((order) => order.status === "Selesai")
 
   // Filter by period
-  const now = new Date();
+  const now = new Date()
   if (period === "today") {
-    const today = now.toISOString().split("T")[0];
-    filteredHistory = filteredHistory.filter(
-      (h) => h.completedAt?.startsWith(today) || h.updatedAt?.startsWith(today)
-    );
+    const today = now.toISOString().split("T")[0]
+    filteredHistory = filteredHistory.filter((h) => h.completedAt?.startsWith(today) || h.updatedAt?.startsWith(today))
   } else if (period === "week") {
-    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    filteredHistory = filteredHistory.filter(
-      (h) => new Date(h.completedAt || h.updatedAt) >= weekAgo
-    );
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+    filteredHistory = filteredHistory.filter((h) => new Date(h.completedAt || h.updatedAt) >= weekAgo)
   } else if (period === "month") {
-    const monthAgo = new Date(now.getFullYear(), now.getMonth(), 1);
-    filteredHistory = filteredHistory.filter(
-      (h) => new Date(h.completedAt || h.updatedAt) >= monthAgo
-    );
+    const monthAgo = new Date(now.getFullYear(), now.getMonth(), 1)
+    filteredHistory = filteredHistory.filter((h) => new Date(h.completedAt || h.updatedAt) >= monthAgo)
   }
 
   // Filter by courier
   if (courierName) {
-    filteredHistory = filteredHistory.filter(
-      (h) => h.assignedCourierName === courierName
-    );
+    filteredHistory = filteredHistory.filter((h) => h.assignedCourierName === courierName)
   }
 
   // Sort by completed date descending
-  filteredHistory.sort(
-    (a, b) =>
-      new Date(b.completedAt || b.updatedAt) -
-      new Date(a.completedAt || a.updatedAt)
-  );
+  filteredHistory.sort((a, b) => new Date(b.completedAt || b.updatedAt) - new Date(a.completedAt || a.updatedAt))
 
-  renderDeliveryHistory(filteredHistory);
-};
+  renderDeliveryHistory(filteredHistory)
+}
 
 // Initialize when DOM is loaded
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", () => {
     // Firebase will call initApp when ready
-  });
+  })
 } else {
   // Firebase will call initApp when ready
 }
 
 // Import or initialize Lucide icons
 document.addEventListener("DOMContentLoaded", () => {
-  lucide = window.lucide; // Assuming lucide is available in the window object
+  lucide = window.lucide // Assuming lucide is available in the window object
   if (lucide) {
-    lucide.createIcons();
+    lucide.createIcons()
   } else {
-    console.error("Lucide icons not found");
+    console.error("Lucide icons not found")
   }
-});
+})
 
 function formatDateTime(dateString) {
-  if (!dateString) return "-";
-  const date = new Date(dateString);
+  if (!dateString) return "-"
+  const date = new Date(dateString)
   return date.toLocaleString("id-ID", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-  });
+  })
+}
+
+function loadOrdersChart(orders) {
+  const canvas = document.getElementById("orders-chart")
+  if (!canvas) {
+    console.error("Orders chart canvas not found")
+    return
+  }
+
+  const ctx = canvas.getContext("2d")
+  if (!ctx) {
+    console.error("Cannot get 2D context for orders chart")
+    return
+  }
+
+  // Get last 7 days data
+  const last7Days = []
+  const ordersData = []
+
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date()
+    date.setDate(date.getDate() - i)
+    const dayString = date.toISOString().split("T")[0]
+    last7Days.push(date.toLocaleDateString("id-ID", { day: "2-digit", month: "2-digit" }))
+
+    const dayOrders = orders.filter((order) => order.createdAt?.startsWith(dayString)).length
+    ordersData.push(dayOrders)
+  }
+
+  // Destroy existing chart if exists
+  if (window.ordersChart) {
+    window.ordersChart.destroy()
+  }
+
+  try {
+    window.ordersChart = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels: last7Days,
+        datasets: [
+          {
+            label: "Orders",
+            data: ordersData,
+            backgroundColor: "rgba(75, 192, 192, 0.5)",
+            borderColor: "rgb(75, 192, 192)",
+            borderWidth: 1,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            labels: {
+              color: "white",
+            },
+          },
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              color: "white",
+              stepSize: 1,
+            },
+            grid: {
+              color: "rgba(255, 255, 255, 0.1)",
+            },
+          },
+          x: {
+            ticks: {
+              color: "white",
+            },
+            grid: {
+              color: "rgba(255, 255, 255, 0.1)",
+            },
+          },
+        },
+      },
+    })
+    console.log("✅ Orders chart created successfully")
+  } catch (error) {
+    console.error("❌ Error creating orders chart:", error)
+  }
 }
