@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Depot Air Minum Dashboard</title>
+    <title>Login Admin - Depot Air Minum</title>
 
     <!-- Favicon -->
     <link
@@ -14,7 +14,6 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="styles.css" />
     <script>
       tailwind.config = {
@@ -52,893 +51,33 @@
           class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-400 mx-auto mb-4"
         ></div>
         <p class="text-white text-lg">Connecting to Firebase...</p>
-        <p class="text-gray-400 text-sm mt-2">
-          Pastikan Firestore Rules sudah diatur
-        </p>
       </div>
     </div>
 
-    <!-- Toast Notification -->
-    <div id="toast" class="fixed top-4 right-4 z-50 hidden">
-      <div class="bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg">
-        <span id="toast-message">Success message</span>
-      </div>
-    </div>
-
-    <!-- Mobile Sidebar Overlay -->
-    <div
-      id="sidebar-overlay"
-      class="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden hidden"
-    ></div>
-
-    <!-- Sidebar -->
-    <div
-      id="sidebar"
-      class="fixed left-0 top-0 h-full w-64 bg-slate-800/50 backdrop-blur-lg border-r border-white/10 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300"
-    >
-      <div class="p-6">
-        <div class="flex items-center gap-3 mb-8">
+    <!-- Login Form -->
+    <div class="min-h-screen flex items-center justify-center p-4">
+      <div class="glass-card p-8 rounded-lg w-full max-w-md">
+        <div class="text-center mb-8">
           <div
-            class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center"
+            class="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center mx-auto mb-4"
           >
-            <i data-lucide="droplets" class="h-6 w-6 text-white"></i>
+            <i data-lucide="shield-check" class="h-8 w-8 text-white"></i>
           </div>
-          <div>
-            <h1 class="text-white font-bold text-lg">Depot Air</h1>
-            <p class="text-gray-400 text-sm">Management System</p>
-          </div>
+          <h1 class="text-white text-2xl font-bold">Login Admin</h1>
+          <p class="text-gray-400 text-sm mt-2">Depot Air Minum Management</p>
         </div>
 
-        <nav class="space-y-2">
-          <a
-            href="#dashboard"
-            class="nav-item active flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-white/10 transition-colors"
-          >
-            <i data-lucide="layout-dashboard" class="h-5 w-5"></i>
-            Dashboard
-          </a>
-          <a
-            href="#customers"
-            class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-white/10 transition-colors"
-          >
-            <i data-lucide="users" class="h-5 w-5"></i>
-            Pelanggan
-          </a>
-          <a
-            href="#couriers"
-            class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-white/10 transition-colors"
-          >
-            <i data-lucide="truck" class="h-5 w-5"></i>
-            Kurir
-          </a>
-          <a
-            href="#orders"
-            class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-white/10 transition-colors"
-          >
-            <i data-lucide="shopping-cart" class="h-5 w-5"></i>
-            Pesanan
-          </a>
-          <a
-            href="#water-types"
-            class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-white/10 transition-colors"
-          >
-            <i data-lucide="droplets" class="h-5 w-5"></i>
-            Jenis Air
-          </a>
-          <a
-            href="#stock"
-            class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-white/10 transition-colors"
-          >
-            <i data-lucide="package" class="h-5 w-5"></i>
-            Stok
-          </a>
-          <a
-            href="#analytics"
-            class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-white/10 transition-colors"
-          >
-            <i data-lucide="bar-chart-3" class="h-5 w-5"></i>
-            Analytics
-          </a>
-        </nav>
-      </div>
-
-      <div
-        class="absolute bottom-0 left-0 right-0 p-6 border-t border-white/10"
-      >
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <div
-              class="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center"
-            >
-              <i data-lucide="user" class="h-4 w-4 text-white"></i>
-            </div>
-            <div>
-              <p class="text-white text-sm font-medium">Admin</p>
-              <p class="text-gray-400 text-xs">Online</p>
-            </div>
-          </div>
-          <button
-            id="logout-btn"
-            class="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg"
-          >
-            <i data-lucide="log-out" class="h-4 w-4"></i>
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Main Content -->
-    <div class="lg:ml-64 min-h-screen">
-      <!-- Header -->
-      <header
-        class="bg-slate-800/30 backdrop-blur-lg border-b border-white/10 px-6 py-4"
-      >
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-4">
-            <button
-              id="sidebar-toggle"
-              class="lg:hidden p-2 text-white hover:bg-white/10 rounded-lg"
-            >
-              <i data-lucide="menu" class="h-6 w-6"></i>
-            </button>
-            <div>
-              <h2 id="page-title" class="text-white text-xl font-semibold">
-                Dashboard
-              </h2>
-              <p id="current-time" class="text-gray-400 text-sm">Loading...</p>
-            </div>
-          </div>
-          <div class="flex items-center gap-4">
-            <button
-              class="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg"
-            >
-              <i data-lucide="bell" class="h-5 w-5"></i>
-            </button>
-            <button
-              class="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg"
-            >
-              <i data-lucide="settings" class="h-5 w-5"></i>
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <!-- Page Content -->
-      <main class="p-6">
-        <!-- Dashboard Page -->
-        <div id="page-dashboard" class="page-content">
-          <!-- Stats Cards -->
-          <div
-            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
-          >
-            <div class="glass-card p-6 rounded-lg">
-              <div class="flex items-center justify-between">
-                <div>
-                  <p class="text-gray-400 text-sm">Total Pelanggan</p>
-                  <p id="total-customers" class="text-white text-2xl font-bold">
-                    0
-                  </p>
-                </div>
-                <div
-                  class="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center"
-                >
-                  <i data-lucide="users" class="h-6 w-6 text-blue-400"></i>
-                </div>
-              </div>
-            </div>
-
-            <div class="glass-card p-6 rounded-lg">
-              <div class="flex items-center justify-between">
-                <div>
-                  <p class="text-gray-400 text-sm">Pesanan Hari Ini</p>
-                  <p id="today-orders" class="text-white text-2xl font-bold">
-                    0
-                  </p>
-                </div>
-                <div
-                  class="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center"
-                >
-                  <i
-                    data-lucide="shopping-cart"
-                    class="h-6 w-6 text-green-400"
-                  ></i>
-                </div>
-              </div>
-            </div>
-
-            <div class="glass-card p-6 rounded-lg">
-              <div class="flex items-center justify-between">
-                <div>
-                  <p class="text-gray-400 text-sm">Pesanan Selesai</p>
-                  <p
-                    id="completed-orders"
-                    class="text-white text-2xl font-bold"
-                  >
-                    0
-                  </p>
-                </div>
-                <div
-                  class="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center"
-                >
-                  <i
-                    data-lucide="check-circle"
-                    class="h-6 w-6 text-purple-400"
-                  ></i>
-                </div>
-              </div>
-            </div>
-
-            <div class="glass-card p-6 rounded-lg">
-              <div class="flex items-center justify-between">
-                <div>
-                  <p class="text-gray-400 text-sm">Pendapatan Hari Ini</p>
-                  <p id="total-revenue" class="text-white text-2xl font-bold">
-                    Rp 0
-                  </p>
-                </div>
-                <div
-                  class="w-12 h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center"
-                >
-                  <i
-                    data-lucide="dollar-sign"
-                    class="h-6 w-6 text-yellow-400"
-                  ></i>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Charts and Recent Activity -->
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <!-- Recent Orders -->
-            <div class="glass-card p-6 rounded-lg">
-              <h3 class="text-white text-lg font-semibold mb-4">
-                Pesanan Terbaru
-              </h3>
-              <div id="recent-orders" class="space-y-3">
-                <!-- Dynamic content -->
-              </div>
-            </div>
-
-            <!-- Popular Products -->
-            <div class="glass-card p-6 rounded-lg">
-              <h3 class="text-white text-lg font-semibold mb-4">
-                Produk Populer
-              </h3>
-              <div id="popular-products" class="space-y-4">
-                <!-- Dynamic content -->
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Customers Page -->
-        <div id="page-customers" class="page-content hidden">
-          <div
-            class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6"
-          >
-            <div>
-              <h2 class="text-white text-2xl font-bold">Manajemen Pelanggan</h2>
-              <p class="text-gray-400">Kelola data pelanggan depot air</p>
-            </div>
-            <button
-              id="add-customer-btn"
-              class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2"
-            >
-              <i data-lucide="plus" class="h-4 w-4"></i>
-              Tambah Pelanggan
-            </button>
-          </div>
-
-          <!-- Customer Stats -->
-          <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div class="glass-card p-4 rounded-lg text-center">
-              <p class="text-gray-400 text-sm">Total</p>
-              <p id="customers-total" class="text-white text-xl font-bold">0</p>
-            </div>
-            <div class="glass-card p-4 rounded-lg text-center">
-              <p class="text-gray-400 text-sm">Aktif</p>
-              <p id="customers-active" class="text-green-400 text-xl font-bold">
-                0
-              </p>
-            </div>
-            <div class="glass-card p-4 rounded-lg text-center">
-              <p class="text-gray-400 text-sm">Pasif</p>
-              <p
-                id="customers-passive"
-                class="text-yellow-400 text-xl font-bold"
-              >
-                0
-              </p>
-            </div>
-            <div class="glass-card p-4 rounded-lg text-center">
-              <p class="text-gray-400 text-sm">Tidak Aktif</p>
-              <p id="customers-inactive" class="text-red-400 text-xl font-bold">
-                0
-              </p>
-            </div>
-          </div>
-
-          <!-- Search -->
-          <div class="mb-6">
-            <div class="relative">
-              <i
-                data-lucide="search"
-                class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400"
-              ></i>
-              <input
-                id="customer-search"
-                type="text"
-                placeholder="Cari pelanggan..."
-                class="w-full pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
-              />
-            </div>
-          </div>
-
-          <!-- Customers Grid -->
-          <div
-            id="customers-grid"
-            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-          >
-            <!-- Dynamic content -->
-          </div>
-        </div>
-
-        <!-- Couriers Page -->
-        <div id="page-couriers" class="page-content hidden">
-          <div
-            class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6"
-          >
-            <div>
-              <h2 class="text-white text-2xl font-bold">Manajemen Kurir</h2>
-              <p class="text-gray-400">Kelola data kurir pengantar depot air</p>
-            </div>
-            <button
-              id="add-courier-btn"
-              class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2"
-            >
-              <i data-lucide="plus" class="h-4 w-4"></i>
-              Tambah Kurir
-            </button>
-          </div>
-
-          <!-- Courier Stats -->
-          <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div class="glass-card p-4 rounded-lg text-center">
-              <p class="text-gray-400 text-sm">Total Kurir</p>
-              <p id="couriers-total" class="text-white text-xl font-bold">0</p>
-            </div>
-            <div class="glass-card p-4 rounded-lg text-center">
-              <p class="text-gray-400 text-sm">Aktif</p>
-              <p id="couriers-active" class="text-green-400 text-xl font-bold">
-                0
-              </p>
-            </div>
-            <div class="glass-card p-4 rounded-lg text-center">
-              <p class="text-gray-400 text-sm">Delivery Minggu Ini</p>
-              <p
-                id="couriers-weekly-delivery"
-                class="text-blue-400 text-xl font-bold"
-              >
-                0
-              </p>
-            </div>
-            <div class="glass-card p-4 rounded-lg text-center">
-              <p class="text-gray-400 text-sm">Delivery Hari Ini</p>
-              <p
-                id="couriers-daily-delivery"
-                class="text-purple-400 text-xl font-bold"
-              >
-                0
-              </p>
-            </div>
-          </div>
-
-          <!-- Search -->
-          <div class="mb-6">
-            <div class="relative">
-              <i
-                data-lucide="search"
-                class="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400"
-              ></i>
-              <input
-                id="courier-search"
-                type="text"
-                placeholder="Cari kurir..."
-                class="w-full pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
-              />
-            </div>
-          </div>
-
-          <!-- Couriers Grid -->
-          <div
-            id="couriers-grid"
-            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-          >
-            <!-- Dynamic content -->
-          </div>
-        </div>
-
-        <!-- Orders Page -->
-        <div id="page-orders" class="page-content hidden">
-          <div
-            class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6"
-          >
-            <div>
-              <h2 class="text-white text-2xl font-bold">Manajemen Pesanan</h2>
-              <p class="text-gray-400">Kelola pesanan dan pengantaran</p>
-            </div>
-            <button
-              id="add-order-btn"
-              class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2"
-            >
-              <i data-lucide="plus" class="h-4 w-4"></i>
-              Tambah Pesanan
-            </button>
-          </div>
-
-          <!-- Order Stats -->
-          <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-            <div class="glass-card p-4 rounded-lg text-center">
-              <p class="text-gray-400 text-sm">Total Pesanan</p>
-              <p id="orders-total" class="text-white text-xl font-bold">0</p>
-            </div>
-            <div class="glass-card p-4 rounded-lg text-center">
-              <p class="text-gray-400 text-sm">Pending</p>
-              <p id="orders-pending" class="text-red-400 text-xl font-bold">
-                0
-              </p>
-            </div>
-            <div class="glass-card p-4 rounded-lg text-center">
-              <p class="text-gray-400 text-sm">Diproses</p>
-              <p
-                id="orders-processing"
-                class="text-yellow-400 text-xl font-bold"
-              >
-                0
-              </p>
-            </div>
-            <div class="glass-card p-4 rounded-lg text-center">
-              <p class="text-gray-400 text-sm">Dikirim</p>
-              <p id="orders-shipped" class="text-blue-400 text-xl font-bold">
-                0
-              </p>
-            </div>
-            <div class="glass-card p-4 rounded-lg text-center">
-              <p class="text-gray-400 text-sm">Selesai</p>
-              <p id="orders-completed" class="text-green-400 text-xl font-bold">
-                0
-              </p>
-            </div>
-          </div>
-
-          <!-- Order Filters -->
-          <div class="flex flex-wrap gap-4 mb-6">
-            <select
-              id="order-status-filter"
-              class="bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white"
-            >
-              <option value="">Semua Status</option>
-              <option value="Pending">Pending</option>
-              <option value="Diproses">Diproses</option>
-              <option value="Dikirim">Dikirim</option>
-              <option value="Selesai">Selesai</option>
-            </select>
-            <select
-              id="order-courier-filter"
-              class="bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white"
-            >
-              <option value="">Semua Kurir</option>
-            </select>
-            <input
-              id="order-search"
-              type="text"
-              placeholder="Cari pesanan..."
-              class="bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-gray-400"
-            />
-          </div>
-
-          <!-- Orders Grid -->
-          <div
-            id="orders-grid"
-            class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6"
-          >
-            <!-- Dynamic content -->
-          </div>
-        </div>
-
-        <!-- Water Types Page -->
-        <div id="page-water-types" class="page-content hidden">
-          <div
-            class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6"
-          >
-            <div>
-              <h2 class="text-white text-2xl font-bold">Manajemen Jenis Air</h2>
-              <p class="text-gray-400">Kelola jenis air dan harga</p>
-            </div>
-            <button
-              id="add-water-type-btn"
-              class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2"
-            >
-              <i data-lucide="plus" class="h-4 w-4"></i>
-              Tambah Jenis Air
-            </button>
-          </div>
-
-          <!-- Water Types Grid -->
-          <div
-            id="water-types-grid"
-            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-          >
-            <!-- Dynamic content -->
-          </div>
-        </div>
-
-        <!-- Stock Page -->
-        <div id="page-stock" class="page-content hidden">
-          <div
-            class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6"
-          >
-            <div>
-              <h2 class="text-white text-2xl font-bold">Manajemen Stok</h2>
-              <p class="text-gray-400">Kelola stok galon dan inventory</p>
-            </div>
-            <button
-              id="update-stock-btn"
-              class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2"
-            >
-              <i data-lucide="refresh-cw" class="h-4 w-4"></i>
-              Update Stok
-            </button>
-          </div>
-
-          <!-- Stock Overview -->
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="glass-card p-6 rounded-lg">
-              <div class="flex items-center justify-between mb-4">
-                <h3 class="text-white text-lg font-semibold">Galon Terisi</h3>
-                <div
-                  class="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center"
-                >
-                  <i data-lucide="droplets" class="h-6 w-6 text-blue-400"></i>
-                </div>
-              </div>
-              <p id="stock-filled" class="text-3xl font-bold text-white mb-2">
-                0
-              </p>
-              <p class="text-gray-400 text-sm">Siap untuk dikirim</p>
-            </div>
-
-            <div class="glass-card p-6 rounded-lg">
-              <div class="flex items-center justify-between mb-4">
-                <h3 class="text-white text-lg font-semibold">Galon Kosong</h3>
-                <div
-                  class="w-12 h-12 bg-gray-500/20 rounded-lg flex items-center justify-center"
-                >
-                  <i data-lucide="circle" class="h-6 w-6 text-gray-400"></i>
-                </div>
-              </div>
-              <p id="stock-empty" class="text-3xl font-bold text-white mb-2">
-                0
-              </p>
-              <p class="text-gray-400 text-sm">Perlu diisi ulang</p>
-            </div>
-
-            <div class="glass-card p-6 rounded-lg">
-              <div class="flex items-center justify-between mb-4">
-                <h3 class="text-white text-lg font-semibold">Galon Rusak</h3>
-                <div
-                  class="w-12 h-12 bg-red-500/20 rounded-lg flex items-center justify-center"
-                >
-                  <i
-                    data-lucide="alert-triangle"
-                    class="h-6 w-6 text-red-400"
-                  ></i>
-                </div>
-              </div>
-              <p id="stock-damaged" class="text-3xl font-bold text-white mb-2">
-                0
-              </p>
-              <p class="text-gray-400 text-sm">Perlu diperbaiki</p>
-            </div>
-          </div>
-
-          <!-- Stock History -->
-          <div class="glass-card p-6 rounded-lg">
-            <h3 class="text-white text-lg font-semibold mb-4">Riwayat Stok</h3>
-            <div id="stock-history" class="space-y-3">
-              <!-- Dynamic content -->
-            </div>
-          </div>
-        </div>
-
-        <!-- Analytics Page -->
-        <div id="page-analytics" class="page-content hidden">
-          <div class="mb-6">
-            <h2 class="text-white text-2xl font-bold">Analytics Dashboard</h2>
-            <p class="text-gray-400">Analisis performa dan statistik bisnis</p>
-          </div>
-
-          <!-- Analytics Cards -->
-          <div
-            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
-          >
-            <div class="glass-card p-6 rounded-lg">
-              <h3 class="text-gray-400 text-sm mb-2">Revenue Bulan Ini</h3>
-              <p
-                id="analytics-monthly-revenue"
-                class="text-2xl font-bold text-white"
-              >
-                Rp 0
-              </p>
-              <p class="text-green-400 text-sm mt-1">+0% dari bulan lalu</p>
-            </div>
-            <div class="glass-card p-6 rounded-lg">
-              <h3 class="text-gray-400 text-sm mb-2">Pesanan Bulan Ini</h3>
-              <p
-                id="analytics-monthly-orders"
-                class="text-2xl font-bold text-white"
-              >
-                0
-              </p>
-              <p class="text-blue-400 text-sm mt-1">+0% dari bulan lalu</p>
-            </div>
-            <div class="glass-card p-6 rounded-lg">
-              <h3 class="text-gray-400 text-sm mb-2">Pelanggan Baru</h3>
-              <p
-                id="analytics-new-customers"
-                class="text-2xl font-bold text-white"
-              >
-                0
-              </p>
-              <p class="text-purple-400 text-sm mt-1">Bulan ini</p>
-            </div>
-            <div class="glass-card p-6 rounded-lg">
-              <h3 class="text-gray-400 text-sm mb-2">Rata-rata Order</h3>
-              <p id="analytics-avg-order" class="text-2xl font-bold text-white">
-                Rp 0
-              </p>
-              <p class="text-yellow-400 text-sm mt-1">Per pesanan</p>
-            </div>
-          </div>
-
-          <!-- Analytics Page - Replace existing charts section -->
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <div class="glass-card p-6 rounded-lg">
-              <h3 class="text-white text-lg font-semibold mb-4">
-                Revenue Trend (7 Hari Terakhir)
-              </h3>
-              <canvas id="revenue-chart" width="400" height="200"></canvas>
-            </div>
-            <div class="glass-card p-6 rounded-lg">
-              <h3 class="text-white text-lg font-semibold mb-4">
-                Pesanan per Hari (7 Hari Terakhir)
-              </h3>
-              <canvas id="orders-chart" width="400" height="200"></canvas>
-            </div>
-          </div>
-
-          <!-- History Pengantaran -->
-          <div class="glass-card p-6 rounded-lg">
-            <div class="flex justify-between items-center mb-4">
-              <h3 class="text-white text-lg font-semibold">
-                History Pengantaran
-              </h3>
-              <div class="flex gap-2">
-                <select
-                  id="history-period"
-                  onchange="filterDeliveryHistory()"
-                  class="bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white text-sm"
-                >
-                  <option value="today">Hari Ini</option>
-                  <option value="week">Minggu Ini</option>
-                  <option value="month">Bulan Ini</option>
-                  <option value="all">Semua</option>
-                </select>
-                <select
-                  id="history-courier"
-                  onchange="filterDeliveryHistory()"
-                  class="bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white text-sm"
-                >
-                  <option value="">Semua Kurir</option>
-                </select>
-              </div>
-            </div>
-            <div
-              id="delivery-history"
-              class="space-y-3 max-h-96 overflow-y-auto"
-            >
-              <!-- Dynamic content -->
-            </div>
-          </div>
-        </div>
-      </main>
-    </div>
-
-    <!-- Customer Modal -->
-    <div
-      id="customer-modal"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden"
-    >
-      <div
-        class="bg-slate-900 rounded-lg p-6 w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto"
-      >
-        <div class="flex justify-between items-center mb-4">
-          <h3
-            id="customer-modal-title"
-            class="text-white text-lg font-semibold"
-          >
-            Tambah Pelanggan Baru
-          </h3>
-          <button
-            id="customer-cancel-btn"
-            class="text-gray-400 hover:text-white"
-          >
-            <i data-lucide="x" class="h-5 w-5"></i>
-          </button>
-        </div>
-
-        <form id="customer-form" class="space-y-4">
+        <form id="admin-login-form" class="space-y-6">
           <div>
             <label class="block text-gray-300 text-sm font-medium mb-2"
-              >Nama Pelanggan</label
+              >Username</label
             >
             <input
-              id="customer-name"
+              id="login-username"
               type="text"
               required
-              class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
-            />
-          </div>
-
-          <div>
-            <label class="block text-gray-300 text-sm font-medium mb-2"
-              >Nomor WhatsApp</label
-            >
-            <input
-              id="customer-phone"
-              type="tel"
-              required
-              placeholder="08xxxxxxxxxx"
-              class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
-            />
-          </div>
-
-          <div>
-            <label class="block text-gray-300 text-sm font-medium mb-2"
-              >Alamat Lengkap</label
-            >
-            <textarea
-              id="customer-address"
-              required
-              rows="3"
-              class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
-            ></textarea>
-          </div>
-
-          <div>
-            <label class="block text-gray-300 text-sm font-medium mb-2"
-              >Link Google Maps (Opsional)</label
-            >
-            <input
-              id="customer-map"
-              type="url"
-              placeholder="https://maps.google.com/..."
-              class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
-            />
-          </div>
-
-          <div>
-            <label class="block text-gray-300 text-sm font-medium mb-2"
-              >Foto Rumah (JPG/PNG)</label
-            >
-            <input
-              id="customer-photo"
-              type="file"
-              accept="image/jpeg,image/jpg,image/png,image/gif"
-              class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white file:mr-4 file:py-1 file:px-2 file:rounded file:border-0 file:text-sm file:bg-blue-500 file:text-white hover:file:bg-blue-600"
-            />
-            <p class="text-xs text-gray-400 mt-1">Max 8MB - JPG, PNG, GIF</p>
-          </div>
-
-          <div>
-            <label class="block text-gray-300 text-sm font-medium mb-2"
-              >Catatan (Opsional)</label
-            >
-            <textarea
-              id="customer-notes"
-              rows="2"
-              placeholder="Catatan khusus untuk pelanggan..."
-              class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
-            ></textarea>
-          </div>
-
-          <div class="flex gap-3 pt-4">
-            <button
-              type="button"
-              class="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg"
-              onclick="closeCustomerModal()"
-            >
-              Batal
-            </button>
-            <button
-              type="submit"
-              class="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg"
-            >
-              <span id="customer-submit-text">Simpan</span>
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Courier Modal -->
-    <div
-      id="courier-modal"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden"
-    >
-      <div
-        class="bg-slate-900 rounded-lg p-6 w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto"
-      >
-        <div class="flex justify-between items-center mb-4">
-          <h3 id="courier-modal-title" class="text-white text-lg font-semibold">
-            Tambah Kurir Baru
-          </h3>
-          <button
-            id="courier-cancel-btn"
-            class="text-gray-400 hover:text-white"
-          >
-            <i data-lucide="x" class="h-5 w-5"></i>
-          </button>
-        </div>
-
-        <form id="courier-form" class="space-y-4">
-          <div>
-            <label class="block text-gray-300 text-sm font-medium mb-2"
-              >Nama Kurir</label
-            >
-            <input
-              id="courier-name"
-              type="text"
-              required
-              class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
-            />
-          </div>
-
-          <div>
-            <label class="block text-gray-300 text-sm font-medium mb-2"
-              >Nomor HP</label
-            >
-            <input
-              id="courier-phone"
-              type="tel"
-              placeholder="08xxxxxxxxxx"
-              class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
-            />
-          </div>
-
-          <div>
-            <label class="block text-gray-300 text-sm font-medium mb-2"
-              >Foto Kurir (JPG/PNG)</label
-            >
-            <input
-              id="courier-photo"
-              type="file"
-              accept="image/jpeg,image/jpg,image/png,image/gif"
-              class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white file:mr-4 file:py-1 file:px-2 file:rounded file:border-0 file:text-sm file:bg-blue-500 file:text-white hover:file:bg-blue-600"
-            />
-            <p class="text-xs text-gray-400 mt-1">Max 8MB - JPG, PNG, GIF</p>
-          </div>
-
-          <div>
-            <label class="block text-gray-300 text-sm font-medium mb-2"
-              >Username Login</label
-            >
-            <input
-              id="courier-username"
-              type="text"
-              required
-              class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+              value="admin"
+              class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
             />
           </div>
 
@@ -947,446 +86,39 @@
               >Password</label
             >
             <input
-              id="courier-password"
+              id="login-password"
               type="password"
               required
-              class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+              value="admin123"
+              class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
             />
           </div>
 
-          <div class="flex items-center space-x-2">
-            <input
-              id="courier-active"
-              type="checkbox"
-              checked
-              class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-            />
-            <label for="courier-active" class="text-gray-300 text-sm"
-              >Kurir Aktif</label
-            >
-          </div>
-
-          <div class="flex gap-3 pt-4">
-            <button
-              type="button"
-              class="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg"
-              onclick="closeCourierModal()"
-            >
-              Batal
-            </button>
-            <button
-              type="submit"
-              class="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg"
-            >
-              <span id="courier-submit-text">Simpan</span>
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Order Modal -->
-    <div
-      id="order-modal"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden"
-    >
-      <div
-        class="bg-slate-900 rounded-lg p-6 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto"
-      >
-        <div class="flex justify-between items-center mb-4">
-          <h3 id="order-modal-title" class="text-white text-lg font-semibold">
-            Tambah Pesanan Baru
-          </h3>
-          <button id="order-cancel-btn" class="text-gray-400 hover:text-white">
-            <i data-lucide="x" class="h-5 w-5"></i>
-          </button>
-        </div>
-
-        <form id="order-form" class="space-y-4">
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-gray-300 text-sm font-medium mb-2"
-                >Pelanggan</label
-              >
-              <div class="relative">
-                <input
-                  id="order-customer-search"
-                  type="text"
-                  placeholder="Cari nama pelanggan..."
-                  required
-                  class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
-                  oninput="searchCustomers(this.value)"
-                  autocomplete="off"
-                />
-                <div
-                  id="customer-dropdown"
-                  class="absolute top-full left-0 right-0 bg-slate-800 border border-white/20 rounded-lg mt-1 max-h-48 overflow-y-auto z-10 hidden"
-                >
-                  <!-- Customer options will be populated here -->
-                </div>
-                <input type="hidden" id="order-customer" required />
-              </div>
-            </div>
-            <div>
-              <label class="block text-gray-300 text-sm font-medium mb-2"
-                >Kurir</label
-              >
-              <select
-                id="order-courier-type"
-                onchange="toggleCourierSelection()"
-                required
-                class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
-              >
-                <option value="">Pilih Metode</option>
-                <option value="auto">Otomatis</option>
-                <option value="manual">Pilih Manual</option>
-              </select>
-            </div>
-          </div>
-
-          <div id="manual-courier-selection" class="hidden">
-            <label class="block text-gray-300 text-sm font-medium mb-2"
-              >Pilih Kurir</label
-            >
-            <select
-              id="order-courier"
-              class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
-            >
-              <option value="">Pilih Kurir</option>
-            </select>
-          </div>
-
-          <div class="grid grid-cols-3 gap-4">
-            <div>
-              <label class="block text-gray-300 text-sm font-medium mb-2"
-                >Jenis Layanan</label
-              >
-              <select
-                id="order-delivery-type"
-                onchange="updatePriceByDeliveryType()"
-                required
-                class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
-              >
-                <option value="">Pilih Layanan</option>
-                <option value="pickup">Ambil Sendiri</option>
-                <option value="delivery">Antar ke Rumah</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-gray-300 text-sm font-medium mb-2"
-                >Jenis Air</label
-              >
-              <select
-                id="order-water-type"
-                onchange="updatePriceByWaterType()"
-                required
-                class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
-              >
-                <option value="">Pilih Jenis</option>
-              </select>
-            </div>
-            <div>
-              <label class="block text-gray-300 text-sm font-medium mb-2"
-                >Waktu Pesanan</label
-              >
-              <input
-                id="order-time"
-                type="datetime-local"
-                required
-                class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
-              />
-            </div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-gray-300 text-sm font-medium mb-2"
-                >Jumlah Galon</label
-              >
-              <input
-                id="order-quantity"
-                type="number"
-                min="1"
-                required
-                class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
-              />
-            </div>
-            <div>
-              <label class="block text-gray-300 text-sm font-medium mb-2"
-                >Harga (Rp)</label
-              >
-              <input
-                id="order-price"
-                type="number"
-                min="0"
-                required
-                class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
-              />
-            </div>
-            <div>
-              <label class="block text-gray-300 text-sm font-medium mb-2"
-                >Status</label
-              >
-              <select
-                id="order-status"
-                required
-                class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
-              >
-                <option value="Pending">Pending</option>
-                <option value="Diproses">Diproses</option>
-                <option value="Dikirim">Dikirim</option>
-                <option value="Selesai">Selesai</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-gray-300 text-sm font-medium mb-2"
-              >Catatan</label
-            >
-            <textarea
-              id="order-notes"
-              rows="2"
-              placeholder="Catatan pesanan..."
-              class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
-            ></textarea>
-          </div>
-
-          <div class="flex gap-3 pt-4">
-            <button
-              type="button"
-              class="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg"
-              onclick="closeOrderModal()"
-            >
-              Batal
-            </button>
-            <button
-              type="submit"
-              class="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg"
-            >
-              <span id="order-submit-text">Simpan</span>
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Water Type Modal -->
-    <div
-      id="water-type-modal"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden"
-    >
-      <div
-        class="bg-slate-900 rounded-lg p-6 w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto"
-      >
-        <div class="flex justify-between items-center mb-4">
-          <h3
-            id="water-type-modal-title"
-            class="text-white text-lg font-semibold"
-          >
-            Tambah Jenis Air Baru
-          </h3>
           <button
-            id="water-type-cancel-btn"
-            class="text-gray-400 hover:text-white"
+            type="submit"
+            class="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-medium transition-colors"
           >
-            <i data-lucide="x" class="h-5 w-5"></i>
+            <span id="login-btn-text">Masuk</span>
           </button>
-        </div>
-
-        <form id="water-type-form" class="space-y-4">
-          <div>
-            <label class="block text-gray-300 text-sm font-medium mb-2"
-              >Nama Jenis Air</label
-            >
-            <input
-              id="water-type-name"
-              type="text"
-              required
-              class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
-            />
-          </div>
-
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-gray-300 text-sm font-medium mb-2"
-                >Harga Ambil Sendiri (Rp)</label
-              >
-              <input
-                id="water-type-price"
-                type="number"
-                min="0"
-                required
-                class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
-              />
-            </div>
-            <div>
-              <label class="block text-gray-300 text-sm font-medium mb-2"
-                >Harga Antar (Rp)</label
-              >
-              <input
-                id="water-type-delivery-price"
-                type="number"
-                min="0"
-                required
-                class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-gray-300 text-sm font-medium mb-2"
-              >Deskripsi (Opsional)</label
-            >
-            <textarea
-              id="water-type-description"
-              rows="2"
-              placeholder="Deskripsi jenis air..."
-              class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
-            ></textarea>
-          </div>
-
-          <div class="flex items-center space-x-2">
-            <input
-              id="water-type-active"
-              type="checkbox"
-              checked
-              class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-            />
-            <label for="water-type-active" class="text-gray-300 text-sm"
-              >Jenis Air Aktif</label
-            >
-          </div>
-
-          <div class="flex gap-3 pt-4">
-            <button
-              type="button"
-              class="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg"
-              onclick="closeWaterTypeModal()"
-            >
-              Batal
-            </button>
-            <button
-              type="submit"
-              class="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg"
-            >
-              <span id="water-type-submit-text">Simpan</span>
-            </button>
-          </div>
         </form>
+
+        <div class="mt-6 text-center">
+          <p class="text-gray-400 text-sm">Default: admin / admin123</p>
+          <div class="mt-4 flex justify-center gap-4">
+            <a
+              href="courier-login.html"
+              class="text-blue-400 hover:text-blue-300 text-sm"
+              >Login Kurir</a
+            >
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- Stock Update Modal -->
-    <div
-      id="stock-modal"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden"
-    >
-      <div class="bg-slate-900 rounded-lg p-6 w-full max-w-md mx-4">
-        <div class="flex justify-between items-center mb-4">
-          <h3 class="text-white text-lg font-semibold">Update Stok Galon</h3>
-          <button id="stock-cancel-btn" class="text-gray-400 hover:text-white">
-            <i data-lucide="x" class="h-5 w-5"></i>
-          </button>
-        </div>
-
-        <form id="stock-form" class="space-y-4">
-          <div>
-            <label class="block text-gray-300 text-sm font-medium mb-2"
-              >Galon Terisi</label
-            >
-            <input
-              id="stock-filled-input"
-              type="number"
-              min="0"
-              required
-              class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
-            />
-          </div>
-
-          <div>
-            <label class="block text-gray-300 text-sm font-medium mb-2"
-              >Galon Kosong</label
-            >
-            <input
-              id="stock-empty-input"
-              type="number"
-              min="0"
-              required
-              class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
-            />
-          </div>
-
-          <div>
-            <label class="block text-gray-300 text-sm font-medium mb-2"
-              >Galon Rusak</label
-            >
-            <input
-              id="stock-damaged-input"
-              type="number"
-              min="0"
-              required
-              class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
-            />
-          </div>
-
-          <div>
-            <label class="block text-gray-300 text-sm font-medium mb-2"
-              >Catatan</label
-            >
-            <textarea
-              id="stock-notes"
-              rows="2"
-              placeholder="Catatan update stok..."
-              class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
-            ></textarea>
-          </div>
-
-          <div class="flex gap-3 pt-4">
-            <button
-              type="button"
-              class="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg"
-              onclick="closeStockModal()"
-            >
-              Batal
-            </button>
-            <button
-              type="submit"
-              class="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg"
-            >
-              Update Stok
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Courier Detail Modal -->
-    <div
-      id="courier-detail-modal"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden"
-    >
-      <div
-        class="bg-slate-900 rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
-      >
-        <div class="flex justify-between items-center mb-4">
-          <h3
-            id="courier-detail-title"
-            class="text-white text-lg font-semibold"
-          >
-            Detail Kurir
-          </h3>
-          <button
-            id="courier-detail-cancel-btn"
-            class="text-gray-400 hover:text-white"
-          >
-            <i data-lucide="x" class="h-5 w-5"></i>
-          </button>
-        </div>
-
-        <div id="courier-detail-content">
-          <!-- Dynamic content -->
-        </div>
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-4 right-4 z-50 hidden">
+      <div class="bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg">
+        <span id="toast-message">Success message</span>
       </div>
     </div>
 
@@ -1426,10 +158,6 @@
         const db = getFirestore(app);
         const analytics = getAnalytics(app);
 
-        // Discord Webhook URL
-        const DISCORD_WEBHOOK_URL =
-          "https://discord.com/api/webhooks/1398168018412114020/iRzgRawvv_Q7w7pWvaWHbjuwjoeaRtptj59bFQPrkGrqJndO83YWc01wkSAOLCSUtbAG";
-
         // Make Firebase available globally
         window.db = db;
         window.collection = collection;
@@ -1442,81 +170,136 @@
         window.orderBy = orderBy;
         window.onSnapshot = onSnapshot;
         window.where = where;
-        window.DISCORD_WEBHOOK_URL = DISCORD_WEBHOOK_URL;
-
-        // Test Firebase connection
-        console.log("🔥 Firebase initialized successfully!");
 
         // Initialize app after Firebase is ready
-        window.initApp();
+        window.initAdminLogin();
       } catch (error) {
         console.error("❌ Firebase initialization error:", error);
         document.getElementById("loading").innerHTML = `
-                <div class="text-center">
-                    <div class="text-red-400 text-6xl mb-4">❌</div>
-                    <p class="text-white text-lg">Firebase Connection Failed</p>
-                    <p class="text-gray-400 text-sm mt-2">Check console for details</p>
-                    <button onclick="location.reload()" class="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">
-                        Retry
-                    </button>
-                </div>
-            `;
+        <div class="text-center">
+          <div class="text-red-400 text-6xl mb-4">❌</div>
+          <p class="text-white text-lg">Firebase Connection Failed</p>
+          <p class="text-gray-400 text-sm mt-2">Check console for details</p>
+        </div>
+      `;
       }
     </script>
 
-    <!-- Admin Manual Assignment Modal -->
-    <div
-      id="assign-modal"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden"
-    >
-      <div class="bg-slate-900 rounded-lg p-6 w-full max-w-md mx-4">
-        <div class="flex justify-between items-center mb-4">
-          <h3 class="text-white text-lg font-semibold">Assign Kurir Manual</h3>
-          <button id="assign-cancel-btn" class="text-gray-400 hover:text-white">
-            <i data-lucide="x" class="h-5 w-5"></i>
-          </button>
-        </div>
+    <script>
+      // Global Variables
+      let isLoading = false;
 
-        <div class="mb-4">
-          <p class="text-gray-300 text-sm mb-2">Pesanan:</p>
-          <div id="assign-order-info" class="bg-white/5 p-3 rounded-lg">
-            <!-- Order info will be populated here -->
-          </div>
-        </div>
+      // Initialize App
+      window.initAdminLogin = () => {
+        // Hide loading screen
+        setTimeout(() => {
+          document.getElementById("loading").style.display = "none";
+          initializeEventListeners();
 
-        <form id="assign-form" class="space-y-4">
-          <div>
-            <label class="block text-gray-300 text-sm font-medium mb-2"
-              >Pilih Kurir</label
-            >
-            <select
-              id="assign-courier"
-              required
-              class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
-            >
-              <option value="">Pilih Kurir</option>
-            </select>
-          </div>
+          // Initialize Lucide icons
+          if (window.lucide) {
+            window.lucide.createIcons();
+          }
+        }, 1000);
+      };
 
-          <div class="flex gap-3 pt-4">
-            <button
-              type="button"
-              class="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg"
-              onclick="closeAssignModal()"
-            >
-              Batal
-            </button>
-            <button
-              type="submit"
-              class="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg"
-            >
-              Assign Kurir
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+      // Event Listeners
+      function initializeEventListeners() {
+        document
+          .getElementById("admin-login-form")
+          .addEventListener("submit", handleLogin);
+      }
 
-    <script src="script.js"></script>
+      async function handleLogin(e) {
+        e.preventDefault();
+
+        if (isLoading) return;
+        isLoading = true;
+
+        const submitBtn = document.getElementById("login-btn-text");
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = "Memverifikasi...";
+
+        try {
+          const username = document
+            .getElementById("login-username")
+            .value.trim();
+          const password = document
+            .getElementById("login-password")
+            .value.trim();
+
+          const adminRef = collection(db, "admins");
+          const q = query(
+            adminRef,
+            where("username", "==", username),
+            where("password", "==", password)
+          );
+          const querySnapshot = await getDocs(q);
+
+          if (!querySnapshot.empty) {
+            localStorage.setItem(
+              "adminSession",
+              JSON.stringify({
+                username,
+                loginTime: new Date().toISOString(),
+                role: "admin",
+              })
+            );
+            showToast("✅ Login berhasil! Mengalihkan...", "success");
+            setTimeout(() => {
+              window.location.href = "index.html";
+            }, 1500);
+          } else {
+            showToast("❌ Username atau password salah!", "error");
+          }
+        } catch (error) {
+          console.error("❌ Login error:", error);
+          showToast("❌ Error login: " + error.message, "error");
+        } finally {
+          submitBtn.textContent = originalText;
+          isLoading = false;
+        }
+      }
+
+      // Utility Functions
+      function showToast(message, type = "success") {
+        const toast = document.getElementById("toast");
+        const toastMessage = document.getElementById("toast-message");
+
+        toastMessage.textContent = message;
+
+        // Set toast color based on type
+        const toastContainer = toast.querySelector("div");
+        if (type === "error") {
+          toastContainer.className =
+            "bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg";
+        } else if (type === "warning") {
+          toastContainer.className =
+            "bg-yellow-500 text-white px-4 py-2 rounded-lg shadow-lg";
+        } else {
+          toastContainer.className =
+            "bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg";
+        }
+
+        toast.classList.remove("hidden");
+        toast.classList.add("toast-enter");
+
+        setTimeout(() => {
+          toast.classList.add("toast-exit");
+          setTimeout(() => {
+            toast.classList.add("hidden");
+            toast.classList.remove("toast-enter", "toast-exit");
+          }, 300);
+        }, 3000);
+      }
+
+      // Initialize when DOM is loaded
+      document.addEventListener("DOMContentLoaded", () => {
+        // Initialize lucide when DOM is ready
+        if (window.lucide) {
+          window.lucide.createIcons();
+        }
+      });
+    </script>
   </body>
 </html>
