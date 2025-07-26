@@ -1178,6 +1178,18 @@ function createCustomerCard(customer) {
 
   const statusClass = getStatusClass(customer.status);
 
+  // Calculate customer's total orders from orders array
+  const customerOrders = orders.filter(
+    (order) => order.customerId === customer.id
+  );
+  const totalOrders = customerOrders.length;
+  const lastOrderDate =
+    customerOrders.length > 0
+      ? customerOrders.sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        )[0].createdAt
+      : customer.lastOrder;
+
   card.innerHTML = `
         <div class="flex items-start justify-between mb-4">
             <div class="flex items-center gap-3 flex-1">
@@ -1243,14 +1255,12 @@ function createCustomerCard(customer) {
             <div class="grid grid-cols-2 gap-2 pt-2 border-t border-white/10 text-sm">
                 <div>
                     <span class="text-gray-400">Total Pesanan:</span>
-                    <div class="text-white font-medium">${
-                      customer.totalOrders || 0
-                    }x</div>
+                    <div class="text-white font-medium">${totalOrders}x</div>
                 </div>
                 <div>
                     <span class="text-gray-400">Terakhir:</span>
                     <div class="text-white text-xs">${formatDate(
-                      customer.lastOrder
+                      lastOrderDate
                     )}</div>
                 </div>
             </div>
@@ -1998,9 +2008,9 @@ async function handleOrderSubmit(e) {
       ),
       notes: document.getElementById("order-notes").value,
       orderTime: orderTime,
-      status: document.getElementById("order-status").value, // Fix: Use selected status
-      paidAmount: 0, // Add payment tracking
-      returnedGallons: 0, // Add return tracking
+      status: document.getElementById("order-status").value,
+      paidAmount: 0, // Default to 0 - courier will input
+      returnedGallons: 0, // Default to 0 - courier will input
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -2014,13 +2024,11 @@ async function handleOrderSubmit(e) {
       orderData.courierName = courier.name;
       orderData.assignedCourierId = courierId;
       orderData.assignedCourierName = courier.name;
-      // Don't override status here - keep the selected status
     } else if (courierType === "auto") {
       // Auto-assign - only set to Pending if no specific status was chosen
       if (orderData.status === "Pending") {
         orderData.status = "Pending"; // This will show up in courier dashboard
       }
-      // Don't set assignedCourierId yet - will be set when courier takes it
     }
 
     console.log("📦 Creating order:", orderData);
@@ -2028,9 +2036,16 @@ async function handleOrderSubmit(e) {
     // Save to Firestore
     await window.addDoc(window.collection(window.db, "orders"), orderData);
 
+    // Update customer's last order date
+    await window.updateDoc(window.doc(window.db, "customers", customerId), {
+      lastOrder: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+
     showToast("✅ Pesanan berhasil ditambahkan");
     closeOrderModal();
     await loadOrders();
+    await loadCustomers(); // Reload customers to update order count
     updateDashboardStats();
   } catch (error) {
     console.error("❌ Error saving order:", error);
@@ -2549,6 +2564,12 @@ async function loadAnalytics() {
 
     const avgOrderValue =
       monthlyOrders.length > 0 ? monthlyRevenue / monthlyOrders.length : 0;
+
+    // Calculate total gallons sold
+    const totalGallonsSold = orders.reduce(
+      (sum, order) => sum + (order.quantity || 0),
+      0
+    );
 
     // Update analytics display
     document.getElementById("analytics-monthly-revenue").textContent =
