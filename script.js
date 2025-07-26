@@ -1967,7 +1967,9 @@ async function handleOrderSubmit(e) {
       ),
       waterType: document.getElementById("order-water-type").value,
       deliveryType: document.getElementById("order-delivery-type").value,
-      price: Number.parseInt(document.getElementById("order-price").value),
+      price: parseInt(
+        document.getElementById("order-price").value.replace(/[^\d]/g, "")
+      ),
       notes: document.getElementById("order-notes").value,
       orderTime: orderTime,
       createdAt: new Date().toISOString(),
