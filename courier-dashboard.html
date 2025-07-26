@@ -154,6 +154,60 @@
     </div>
   </div>
 
+  <!-- Courier Order Edit Modal -->
+  <div id="courier-order-edit-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-slate-900 rounded-lg p-6 w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center mb-4">
+        <h3 id="courier-order-edit-title" class="text-white text-lg font-semibold">Edit Pesanan</h3>
+        <button id="courier-order-edit-cancel-btn" class="text-gray-400 hover:text-white">
+          <i data-lucide="x" class="h-5 w-5"></i>
+        </button>
+      </div>
+
+      <form id="courier-order-edit-form" class="space-y-4">
+        <div>
+          <label class="block text-gray-300 text-sm font-medium mb-2">Status</label>
+          <select id="courier-edit-order-status" required 
+            class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white">
+            <option value="Diproses">Diproses</option>
+            <option value="Dikirim">Dikirim</option>
+            <option value="Selesai">Selesai</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-gray-300 text-sm font-medium mb-2">Jumlah Dibayar (Rp)</label>
+          <input id="courier-edit-paid-amount" type="number" min="0" 
+            class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white">
+        </div>
+
+        <div>
+          <label class="block text-gray-300 text-sm font-medium mb-2">Galon Dikembalikan</label>
+          <input id="courier-edit-returned-gallons" type="number" min="0" 
+            class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white">
+          <p class="text-xs text-gray-400 mt-1">Jumlah galon kosong yang dikembalikan</p>
+        </div>
+
+        <div>
+          <label class="block text-gray-300 text-sm font-medium mb-2">Catatan</label>
+          <textarea id="courier-edit-order-notes" rows="2" 
+            class="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400">
+          </textarea>
+        </div>
+
+        <div class="flex gap-3 pt-4">
+          <button type="button" class="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg"
+            onclick="closeCourierOrderEditModal()">
+            Batal
+          </button>
+          <button type="submit" class="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg">
+            Simpan Perubahan
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Firebase SDK -->
   <script type="module">
     // Import the functions you need from the SDKs you need
