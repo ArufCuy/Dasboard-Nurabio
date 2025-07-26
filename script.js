@@ -12,6 +12,7 @@ let stockData = {
   damaged: 0,
 };
 let lucide; // Declare the lucide variable
+let currentEditingOrder = null;
 
 // Initialize App
 window.initApp = () => {
@@ -22,12 +23,13 @@ window.initApp = () => {
     window.location.href = "admin-login.html";
     return;
   } else {
-    const q = query(
-      collection(db, "admins"),
-      where("username", "==", adminSession.username)
+    const q = window.query(
+      window.collection(window.db, "admins"),
+      window.where("username", "==", adminSession.username)
     );
 
-    getDocs(q)
+    window
+      .getDocs(q)
       .then((snapshot) => {
         if (snapshot.empty) {
           alert("Session tidak valid, login ulang!");
@@ -204,6 +206,21 @@ function initializeEventListeners() {
   document.getElementById("assign-modal").addEventListener("click", (e) => {
     if (e.target.id === "assign-modal") {
       closeAssignModal();
+    }
+  });
+
+  // Order Edit Management
+  document
+    .getElementById("order-edit-cancel-btn")
+    .addEventListener("click", closeOrderEditModal);
+  document
+    .getElementById("order-edit-form")
+    .addEventListener("submit", handleOrderEditSubmit);
+
+  // Close modal when clicking outside
+  document.getElementById("order-edit-modal").addEventListener("click", (e) => {
+    if (e.target.id === "order-edit-modal") {
+      closeOrderEditModal();
     }
   });
 }
@@ -1868,6 +1885,15 @@ function openOrderModal() {
   // Populate courier dropdown only
   populateCourierDropdown();
 
+  // Populate status dropdown
+  const statusSelect = document.getElementById("order-status");
+  statusSelect.innerHTML = `
+    <option value="Pending">Pending</option>
+    <option value="Diproses">Diproses</option>
+    <option value="Dikirim">Dikirim</option>
+    <option value="Selesai">Selesai</option>
+  `;
+
   modal.classList.remove("hidden");
 }
 
@@ -1967,11 +1993,14 @@ async function handleOrderSubmit(e) {
       ),
       waterType: document.getElementById("order-water-type").value,
       deliveryType: document.getElementById("order-delivery-type").value,
-      price: parseInt(
+      price: Number.parseInt(
         document.getElementById("order-price").value.replace(/[^\d]/g, "")
       ),
       notes: document.getElementById("order-notes").value,
       orderTime: orderTime,
+      status: document.getElementById("order-status").value, // Fix: Use selected status
+      paidAmount: 0, // Add payment tracking
+      returnedGallons: 0, // Add return tracking
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -1985,10 +2014,12 @@ async function handleOrderSubmit(e) {
       orderData.courierName = courier.name;
       orderData.assignedCourierId = courierId;
       orderData.assignedCourierName = courier.name;
-      orderData.status = "Diproses";
+      // Don't override status here - keep the selected status
     } else if (courierType === "auto") {
-      // Auto-assign - available for any courier to take
-      orderData.status = "Pending"; // This will show up in courier dashboard
+      // Auto-assign - only set to Pending if no specific status was chosen
+      if (orderData.status === "Pending") {
+        orderData.status = "Pending"; // This will show up in courier dashboard
+      }
       // Don't set assignedCourierId yet - will be set when courier takes it
     }
 
@@ -2010,6 +2041,104 @@ async function handleOrderSubmit(e) {
     isLoading = false;
   }
 }
+
+// Order Edit Functions
+function openOrderEditModal(order) {
+  currentEditingOrder = order;
+
+  const modal = document.getElementById("order-edit-modal");
+  const title = document.getElementById("order-edit-modal-title");
+
+  title.textContent = `Edit Pesanan - ${order.customerName}`;
+  fillOrderEditForm(order);
+
+  modal.classList.remove("hidden");
+}
+
+function closeOrderEditModal() {
+  const modal = document.getElementById("order-edit-modal");
+  modal.classList.add("hidden");
+  currentEditingOrder = null;
+  clearOrderEditForm();
+}
+
+function fillOrderEditForm(order) {
+  document.getElementById("edit-order-status").value =
+    order.status || "Pending";
+  document.getElementById("edit-order-quantity").value = order.quantity || 0;
+  document.getElementById("edit-order-price").value = order.price || 0;
+  document.getElementById("edit-paid-amount").value = order.paidAmount || 0;
+  document.getElementById("edit-returned-gallons").value =
+    order.returnedGallons || 0;
+  document.getElementById("edit-order-notes").value = order.notes || "";
+}
+
+function clearOrderEditForm() {
+  document.getElementById("order-edit-form").reset();
+}
+
+async function handleOrderEditSubmit(e) {
+  e.preventDefault();
+
+  if (!currentEditingOrder || isLoading) return;
+  isLoading = true;
+
+  const submitBtn = e.target.querySelector('button[type="submit"]');
+  const originalText = submitBtn.textContent;
+  submitBtn.textContent = "Menyimpan...";
+  submitBtn.disabled = true;
+
+  try {
+    const updateData = {
+      status: document.getElementById("edit-order-status").value,
+      quantity: Number.parseInt(
+        document.getElementById("edit-order-quantity").value
+      ),
+      price: Number.parseInt(document.getElementById("edit-order-price").value),
+      paidAmount: Number.parseInt(
+        document.getElementById("edit-paid-amount").value
+      ),
+      returnedGallons: Number.parseInt(
+        document.getElementById("edit-returned-gallons").value
+      ),
+      notes: document.getElementById("edit-order-notes").value,
+      updatedAt: new Date().toISOString(),
+    };
+
+    // If status changed to Selesai, add completion timestamp
+    if (
+      updateData.status === "Selesai" &&
+      currentEditingOrder.status !== "Selesai"
+    ) {
+      updateData.completedAt = new Date().toISOString();
+    }
+
+    await window.updateDoc(
+      window.doc(window.db, "orders", currentEditingOrder.id),
+      updateData
+    );
+
+    showToast("✅ Pesanan berhasil diperbarui");
+    closeOrderEditModal();
+    await loadOrders();
+    updateDashboardStats();
+  } catch (error) {
+    console.error("❌ Error updating order:", error);
+    showToast("❌ Error memperbarui pesanan: " + error.message, "error");
+  } finally {
+    submitBtn.textContent = originalText;
+    submitBtn.disabled = false;
+    isLoading = false;
+  }
+}
+
+// Global function for edit button
+window.editOrder = (orderId) => {
+  const order = orders.find((o) => o.id === orderId);
+  if (order) {
+    openOrderEditModal(order);
+  }
+};
 
 async function loadOrders() {
   try {
@@ -2076,6 +2205,11 @@ function createOrderCard(order) {
   const courierName =
     order.assignedCourierName || order.courierName || "Belum di-assign";
 
+  // Calculate unpaid amount and unreturned gallons
+  const unpaidAmount = (order.price || 0) - (order.paidAmount || 0);
+  const unreturnedGallons =
+    (order.quantity || 0) - (order.returnedGallons || 0);
+
   card.innerHTML = `
   <div class="flex justify-between items-start mb-4">
     <div>
@@ -2091,6 +2225,10 @@ function createOrderCard(order) {
       </div>
     </div>
     <div class="flex items-center gap-2">
+      <button onclick="editOrder('${order.id}')" 
+        class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded text-xs">
+        Edit
+      </button>
       ${
         order.status === "Pending"
           ? `
@@ -2124,6 +2262,28 @@ function createOrderCard(order) {
       <span class="text-gray-400">Harga:</span>
       <span class="text-white">${formatCurrency(order.price)}</span>
     </div>
+    ${
+      unpaidAmount > 0
+        ? `
+    <div class="flex justify-between">
+      <span class="text-gray-400">Belum Dibayar:</span>
+      <span class="text-yellow-400 font-medium">${formatCurrency(
+        unpaidAmount
+      )}</span>
+    </div>
+    `
+        : ""
+    }
+    ${
+      unreturnedGallons > 0
+        ? `
+    <div class="flex justify-between">
+      <span class="text-gray-400">Belum Kembali:</span>
+      <span class="text-orange-400 font-medium">${unreturnedGallons} galon</span>
+    </div>
+    `
+        : ""
+    }
     <div class="flex justify-between">
       <span class="text-gray-400">Waktu Pesanan:</span>
       <span class="text-white">${formatDateTime(
